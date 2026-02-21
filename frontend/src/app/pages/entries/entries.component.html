@@ -1,0 +1,75 @@
+<div class="page">
+  <div class="header">
+    <h1>Production entries</h1>
+    <div class="header-actions">
+      <button type="button" class="btn" (click)="exportExcel()">Export Excel</button>
+      <a routerLink="/entries/new" class="btn primary">Add entry</a>
+    </div>
+  </div>
+  <section class="filters">
+    <label><span class="label-text">Date from</span><input type="date" [ngModel]="filters().dateFrom" (ngModelChange)="setFilter('dateFrom', $event)" /></label>
+    <label><span class="label-text">Date to</span><input type="date" [ngModel]="filters().dateTo" (ngModelChange)="setFilter('dateTo', $event)" /></label>
+    <label><span class="label-text">Employee</span><select [ngModel]="filters().employee" (ngModelChange)="setFilter('employee', $event)">
+      <option value="">All</option>
+      @for (e of employees(); track e) { <option [value]="e">{{ e }}</option> }
+    </select></label>
+    <label><span class="label-text">Shift</span><select [ngModel]="filters().shift" (ngModelChange)="setFilter('shift', $event)">
+      <option value="">All</option>
+      @for (s of shifts(); track s) { <option [value]="s">{{ s }}</option> }
+    </select></label>
+    <label><span class="label-text">Machine</span><select [ngModel]="filters().machine" (ngModelChange)="setFilter('machine', $event)">
+      <option value="">All</option>
+      @for (m of machines(); track m) { <option [value]="m">{{ m }}</option> }
+    </select></label>
+    <label><span class="label-text">Program No</span><input type="text" [ngModel]="filters().program_no" (ngModelChange)="setFilter('program_no', $event)" placeholder="Filter by program" /></label>
+  </section>
+  @if (error()) { <p class="error">{{ error() }}</p> }
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Employee</th>
+            <th>Shift</th>
+            <th>Machine</th>
+            <th>Program No</th>
+            <th>Cycle (s)</th>
+            <th>Hrs worked</th>
+            <th>Actual PDN (hrs)</th>
+            <th>PDN Req</th>
+            <th>Produced</th>
+            <th>Short</th>
+            <th>Reason / Comments</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of entries(); track e.id) {
+            <tr>
+              <td>{{ e.date }}</td>
+              <td>{{ e.employee_name }}</td>
+              <td>{{ e.shift }}</td>
+              <td>{{ e.machine }}</td>
+              <td>{{ e.program_no }}</td>
+              <td>{{ e.cycle_time_sec }}</td>
+              <td>{{ e.hours_worked != null ? (e.hours_worked | number:'1.1-2') : '-' }}</td>
+              <td>{{ (e.actual_hours ?? e.hours_worked) != null ? ((e.actual_hours ?? e.hours_worked) | number:'1.1-2') : '-' }}</td>
+              <td>{{ e.pdn_req != null ? (e.pdn_req | number:'1.0-0') : '-' }}</td>
+              <td>{{ e.producted_qty != null ? (e.producted_qty | number:'1.2-2') : '-' }}</td>
+              <td [class.negative]="e.short != null && e.short > 0">{{ e.short != null ? (e.short | number:'1.0-0') : '-' }}</td>
+              <td class="notes-cell">{{ e.notes || '' }}</td>
+              <td>
+                <a [routerLink]="['/entries', e.id, 'edit']" class="link">Edit</a>
+                <button type="button" class="link danger" (click)="delete(e.id!)">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (entries().length === 0) { <p class="muted">No entries match the filters.</p> }
+  }
+</div>

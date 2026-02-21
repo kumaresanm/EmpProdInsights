@@ -1,0 +1,98 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.page h1 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--sk-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.form {
+  background: var(--sk-surface);
+  border-radius: var(--sk-radius);
+  box-shadow: var(--sk-shadow-card);
+  border: 1px solid var(--sk-border);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form .grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.form .field {
+  display: block;
+}
+
+.form .field .label-text {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sk-text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.form .field input,
+.form .field select {
+  width: 100%;
+}
+
+.form .field.full-width {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--sk-border);
+}
+
+.actions button {
+  min-width: 6rem;
+}
+
+.btn-link {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.error {
+  color: var(--sk-error);
+  font-size: 0.9375rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--sk-error-bg);
+  border-radius: var(--sk-radius-sm);
+  border-left: 4px solid var(--sk-error);
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--sk-text-muted);
+  margin: 0 0 0.5rem 0;
+}
+
+.hint.expected {
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--sk-bg);
+  border-radius: var(--sk-radius-sm);
+  border-left: 3px solid var(--sk-primary);
+}

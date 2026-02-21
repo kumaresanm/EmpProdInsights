@@ -1,0 +1,54 @@
+<div class="page">
+  <h1>Import from Excel</h1>
+  <a routerLink="/entries" class="back">← Back to list</a>
+  <p class="muted">The app detects columns from your Excel header row and maps them to the right fields. Choose the import type and upload.</p>
+
+  <label class="field">
+    <span class="label-text">What are you importing?</span>
+    <select [value]="importType()" (change)="importType.set($any($event.target).value)">
+      @for (s of schemas(); track s.id) {
+        <option [value]="s.id">{{ s.label }}</option>
+      }
+    </select>
+  </label>
+  @if (currentSchemaDescription()) {
+    <p class="hint">{{ currentSchemaDescription() }}</p>
+  }
+
+  <div class="upload-box">
+    <input type="file" accept=".xlsx,.xls" (change)="onFileSelect($event)" />
+    @if (file()) { <span class="fname">{{ file()?.name }}</span> }
+  </div>
+
+  @if (error()) {
+    <div class="error-box">
+      <p class="error">{{ error() }}</p>
+      @if (missingColumns().length) {
+        <p class="error-detail">Missing columns: <strong>{{ missingColumns().join(', ') }}</strong></p>
+      }
+      @if (errorHint()) {
+        <p class="error-hint">{{ errorHint() }}</p>
+      }
+      @if (detectedColumnsList().length) {
+        <p class="error-detail">Detected: @for (item of detectedColumnsList(); track item.key) { <span class="map-pair">{{ item.value }} → {{ item.key }}</span> }</p>
+      }
+    </div>
+  }
+
+  @if (result()) {
+    <div class="success-box">
+      <p class="success">{{ resultMessage() }}</p>
+      @if (mappedColumnsList().length) {
+        <p class="mapped">Detected columns:
+          @for (item of mappedColumnsList(); track item.key) {
+            <span class="map-pair">{{ item.value }} → {{ item.key }}</span>
+          }
+        </p>
+      }
+    </div>
+  }
+
+  <button type="button" class="btn" (click)="upload()" [disabled]="!file() || uploading()">
+    {{ uploading() ? 'Uploading...' : 'Upload' }}
+  </button>
+</div>

@@ -1,0 +1,11 @@
+{
+  "name": "employee-production-output",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SK Engineering Production Output – deploy build",
+  "scripts": {
+    "build": "node scripts/build-for-render.js",
+    "start": "cd backend && node server.js",
+    "install:all": "cd frontend && npm ci && cd ../backend && npm ci"
+  }
+}

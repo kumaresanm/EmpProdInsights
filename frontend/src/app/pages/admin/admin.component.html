@@ -1,0 +1,94 @@
+<div class="page">
+  <header class="page-header">
+    <a routerLink="/dashboard" class="back">← Dashboard</a>
+    <h1>Administration</h1>
+  </header>
+  @if (error()) { <p class="error">{{ error() }}</p> }
+  @if (message()) { <p class="success">{{ message() }}</p> }
+
+  <div class="sections-grid">
+    <section class="section">
+      <div class="section-head">
+        <h2>Machines</h2>
+        <span class="count" aria-label="Count">{{ machines().length }}</span>
+      </div>
+      <div class="add-row">
+        <input type="text" [ngModel]="newMachine()" (ngModelChange)="newMachine.set($event)" placeholder="Enter machine name" />
+        <button type="button" class="btn-secondary" (click)="addMachine()">Add</button>
+      </div>
+      <div class="list-scroll">
+        @if (machines().length > 0) {
+          <ul class="list">
+            @for (m of machines(); track m) {
+              <li>
+                <span class="item-name">{{ m }}</span>
+                <button type="button" class="remove" (click)="removeMachine(m)" title="Remove">Remove</button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty-state">
+            <p class="empty-label">No machines</p>
+            <p class="empty-hint">Add one above to get started.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Employees</h2>
+        <span class="count" aria-label="Count">{{ employees().length }}</span>
+      </div>
+      <div class="add-row">
+        <input type="text" [ngModel]="newEmployee()" (ngModelChange)="newEmployee.set($event)" placeholder="Enter employee name" />
+        <button type="button" class="btn-secondary" (click)="addEmployee()">Add</button>
+      </div>
+      <div class="list-scroll">
+        @if (employees().length > 0) {
+          <ul class="list">
+            @for (e of employees(); track e) {
+              <li>
+                <span class="item-name">{{ e }}</span>
+                <button type="button" class="remove" (click)="removeEmployee(e)" title="Remove">Remove</button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty-state">
+            <p class="empty-label">No employees</p>
+            <p class="empty-hint">Add one above to get started.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Programs</h2>
+        <span class="count" aria-label="Count">{{ programs().length }}</span>
+      </div>
+      <div class="add-row">
+        <input type="text" [ngModel]="newProgram()" (ngModelChange)="newProgram.set($event)" placeholder="Enter program number" />
+        <button type="button" class="btn-secondary" (click)="addProgram()">Add</button>
+      </div>
+      <div class="list-scroll">
+        @if (programs().length > 0) {
+          <ul class="list">
+            @for (p of programs(); track p) {
+              <li>
+                <span class="item-name">{{ p }}</span>
+                <button type="button" class="remove" (click)="removeProgram(p)" title="Remove">Remove</button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty-state">
+            <p class="empty-label">No programs</p>
+            <p class="empty-hint">Add one above to get started.</p>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</div>

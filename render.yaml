@@ -1,0 +1,12 @@
+# Render Blueprint – one Web Service (API + frontend)
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: employee-production-output
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production

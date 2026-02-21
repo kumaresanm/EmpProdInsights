@@ -1,0 +1,63 @@
+<div class="page">
+  <h1>{{ id() ? 'Edit' : 'Add' }} production entry</h1>
+  <a routerLink="/entries" class="back">← Back to list</a>
+  @if (error()) { <p class="error">{{ error() }}</p> }
+  <form (ngSubmit)="submit()" class="form">
+    <div class="grid">
+      <label class="field">
+        <span class="label-text">Date</span>
+        <input type="date" [ngModel]="model().date" (ngModelChange)="updateField('date', $event)" name="date" required />
+      </label>
+      <label class="field">
+        <span class="label-text">Employee</span>
+        <select [ngModel]="model().employee_name" (ngModelChange)="updateField('employee_name', $event)" name="employee_name" required>
+          <option value="">Select employee</option>
+          @for (e of employeeOptions(); track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label-text">Shift</span>
+        <select [ngModel]="model().shift" (ngModelChange)="updateField('shift', $event)" name="shift">
+          <option value="">Select shift</option>
+          @for (s of shifts(); track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label-text">Machine</span>
+        <select [ngModel]="model().machine" (ngModelChange)="updateField('machine', $event)" name="machine">
+          <option value="">Select machine</option>
+          @for (m of machineOptions(); track m) { <option [value]="m">{{ m }}</option> }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label-text">Program No.</span>
+        <input type="text" [ngModel]="model().program_no" (ngModelChange)="updateField('program_no', $event)" name="program_no" />
+      </label>
+      <label class="field">
+        <span class="label-text">Cycle time (sec)</span>
+        <input type="number" step="0.01" [ngModel]="model().cycle_time_sec" (ngModelChange)="updateField('cycle_time_sec', $event)" name="cycle_time_sec" required />
+      </label>
+      <label class="field">
+        <span class="label-text">Hours worked</span>
+        <input type="number" step="0.01" [ngModel]="model().hours_worked" (ngModelChange)="updateField('hours_worked', $event)" name="hours_worked" required />
+      </label>
+      <label class="field">
+        <span class="label-text">PDN Req (target)</span>
+        <input type="number" step="0.01" [ngModel]="model().pdn_req ?? expectedProduction()" (ngModelChange)="updateField('pdn_req', $event)" name="pdn_req" [placeholder]="expectedProduction() == null ? 'Enter cycle time and hours' : ''" />
+      </label>
+      <label class="field">
+        <span class="label-text">Produced qty</span>
+        <input type="number" step="0.01" [ngModel]="model().producted_qty" (ngModelChange)="updateField('producted_qty', $event)" name="producted_qty" placeholder="Enter actual from machine" />
+      </label>
+    </div>
+    <label class="field full-width">
+      <span class="label-text">Reason / Comments</span>
+      <input type="text" [ngModel]="model().notes" (ngModelChange)="updateField('notes', $event)" name="notes" placeholder="Reason, comments, or notes" />
+    </label>
+    <div class="actions">
+      <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+      <a routerLink="/entries" class="btn-link">Cancel</a>
+    </div>
+  </form>
+  <p class="hint">Actual hours = hours worked × 11/12. PDN Req is auto-calculated (3600 ÷ cycle time × actual hours); you can override if needed. Produced qty is from the machine. Short = PDN Req − Produced (on save).</p>
+</div>

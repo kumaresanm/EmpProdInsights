@@ -1,0 +1,163 @@
+<div class="page">
+  <header class="dashboard-header">
+    <div>
+      <h1>Production Dashboard</h1>
+      <p class="subtitle">SK Engineering — Vendor performance overview</p>
+    </div>
+  </header>
+
+  <section class="filters-bar">
+    <div class="filters-inner">
+      <label><span class="label-text">Month</span>
+        <input type="month" [ngModel]="filters().month" (ngModelChange)="setFilter('month', $event)" />
+      </label>
+      <label><span class="label-text">From</span>
+        <input type="date" [ngModel]="filters().dateFrom" (ngModelChange)="setFilter('dateFrom', $event)" />
+      </label>
+      <label><span class="label-text">To</span>
+        <input type="date" [ngModel]="filters().dateTo" (ngModelChange)="setFilter('dateTo', $event)" />
+      </label>
+      <label><span class="label-text">Employee</span>
+        <select [ngModel]="filters().employee" (ngModelChange)="setFilter('employee', $event)">
+          <option value="">All</option>
+          @for (e of employees(); track e) { <option [value]="e">{{ e }}</option> }
+        </select>
+      </label>
+      <label><span class="label-text">Machine</span>
+        <select [ngModel]="filters().machine" (ngModelChange)="setFilter('machine', $event)">
+          <option value="">All</option>
+          @for (m of machines(); track m) { <option [value]="m">{{ m }}</option> }
+        </select>
+      </label>
+      <label><span class="label-text">Shift</span>
+        <select [ngModel]="filters().shift" (ngModelChange)="setFilter('shift', $event)">
+          <option value="">All</option>
+          @for (s of shifts(); track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </label>
+      <label><span class="label-text">Program</span>
+        <select [ngModel]="filters().program_no" (ngModelChange)="setFilter('program_no', $event)">
+          <option value="">All</option>
+          @for (p of programNos(); track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </label>
+      <button type="button" class="btn btn-apply" (click)="load()">Apply</button>
+    </div>
+  </section>
+
+  @if (loading()) {
+    <div class="loading-state"><p>Loading dashboard…</p></div>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    @let d = data();
+    @if (d) {
+      <div class="period-badge">{{ d.dateFrom }} – {{ d.dateTo }}</div>
+
+      <section class="kpi-cards">
+        <div class="kpi-card">
+          <span class="kpi-label">Actual Hours</span>
+          <span class="kpi-value">{{ d.summary.total_actual_hours | number:'1.2-2' }}</span>
+          <span class="kpi-unit">hrs</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Production Target</span>
+          <span class="kpi-value">{{ d.summary.total_pdn_req | number:'1.0-0' }}</span>
+          <span class="kpi-unit">pcs</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Produced</span>
+          <span class="kpi-value">{{ d.summary.total_producted_qty | number:'1.0-0' }}</span>
+          <span class="kpi-unit">pcs</span>
+        </div>
+        <div class="kpi-card kpi-card--short">
+          <span class="kpi-label">Short</span>
+          <span class="kpi-value">{{ d.summary.total_short | number:'1.0-0' }}</span>
+          <span class="kpi-unit">pcs</span>
+        </div>
+        <div class="kpi-card kpi-card--accent">
+          <span class="kpi-label">Achievement</span>
+          <span class="kpi-value">{{ achievementPct() ?? '—' }}{{ achievementPct() != null ? '%' : '' }}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Entries</span>
+          <span class="kpi-value">{{ d.summary.entry_count }}</span>
+        </div>
+      </section>
+
+      <div class="charts-row">
+        <section class="chart-card">
+          <h2 class="chart-title">Production vs Target</h2>
+          @if (productionVsTargetBar(); as bar) {
+            <div class="chart-production-wrap">
+              <div class="chart-bar-bg">
+                <div class="chart-bar-fill" [style.width.%]="bar.pct"></div>
+              </div>
+              <div class="chart-legend">
+                <span>Produced {{ bar.produced | number:'1.0-0' }} / {{ bar.target | number:'1.0-0' }} target</span>
+                <span class="chart-pct">{{ bar.pct | number:'1.1-1' }}%</span>
+              </div>
+            </div>
+          } @else {
+            <p class="muted">No data for period.</p>
+          }
+        </section>
+
+        <section class="chart-card">
+          <h2 class="chart-title">By Employee (top 12)</h2>
+          @if (byEmployeeBars().length > 0) {
+            <div class="chart-bars">
+              @for (b of byEmployeeBars(); track b.label + (b.sublabel || '')) {
+                <div class="chart-bar-row">
+                  <div class="chart-bar-label">
+                    <span class="chart-bar-name">{{ b.label }}</span>
+                    @if (b.sublabel) { <span class="chart-bar-sublabel">{{ b.sublabel }}</span> }
+                  </div>
+                  <div class="chart-bar-track">
+                    <div class="chart-bar-value" [class.short]="b.isShort" [style.width.%]="b.pct"></div>
+                  </div>
+                  <span class="chart-bar-pct">{{ b.pct }}%</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="muted">No entries for period.</p>
+          }
+        </section>
+      </div>
+
+      <section class="by-employee section-detail">
+        <h2>Detail by Employee & Program</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Program No</th>
+                <th>Actual PDN (hrs)</th>
+                <th>PDN Req</th>
+                <th>Produced</th>
+                <th>Short</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of d.by_employee; track row.employee_name + '|' + row.program_no) {
+                <tr>
+                  <td>{{ row.employee_name }}</td>
+                  <td>{{ row.program_no }}</td>
+                  <td>{{ row.actual_hours | number:'1.2-2' }}</td>
+                  <td>{{ row.pdn_req | number:'1.2-2' }}</td>
+                  <td>{{ row.producted_qty | number:'1.2-2' }}</td>
+                  <td [class.negative]="row.short > 0">{{ row.short | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (d.by_employee.length === 0) {
+          <p class="muted">No production entries for the selected period.</p>
+        }
+      </section>
+    }
+  }
+</div>

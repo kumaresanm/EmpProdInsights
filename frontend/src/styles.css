@@ -1,0 +1,136 @@
+/* SK Engineering – Production Output (MNC-ready) */
+:root {
+  --sk-primary: #0d47a1;
+  --sk-primary-dark: #063970;
+  --sk-primary-light: #1565c0;
+  --sk-accent: #0d47a1;
+  --sk-surface: #ffffff;
+  --sk-bg: #f0f2f5;
+  --sk-border: #d1d9e0;
+  --sk-border-light: #e4e8ec;
+  --sk-text: #1a2332;
+  --sk-text-muted: #5c6b7a;
+  --sk-error: #b71c1c;
+  --sk-error-bg: #ffebee;
+  --sk-success: #1b5e20;
+  --sk-success-bg: #e8f5e9;
+  --sk-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --sk-shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --sk-shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --sk-radius: 8px;
+  --sk-radius-sm: 6px;
+  --sk-transition: 0.2s ease;
+  --font-sans: 'Segoe UI', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--sk-text);
+  background: var(--sk-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global form controls – inputs and dropdowns */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--sk-text);
+  background: var(--sk-surface);
+  border: 1px solid var(--sk-border);
+  border-radius: var(--sk-radius-sm);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235c6b7a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"] {
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
+select:hover { border-color: #a0adba; }
+select:focus,
+input:focus {
+  border-color: var(--sk-primary);
+  box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.18);
+  outline: none;
+}
+
+select option {
+  padding: 0.5rem;
+  background: var(--sk-surface);
+}
+
+/* Buttons */
+button,
+.btn {
+  padding: 0.625rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: var(--sk-radius-sm);
+  cursor: pointer;
+  transition: background var(--sk-transition), border-color var(--sk-transition), box-shadow var(--sk-transition), transform 0.05s ease;
+}
+button:active:not(:disabled),
+.btn:active:not(:disabled) { transform: scale(0.98); }
+
+button:disabled,
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary,
+button[type="submit"] {
+  background: var(--sk-primary);
+  color: #fff;
+  border: none;
+}
+.btn-primary:hover:not(:disabled),
+button[type="submit"]:hover:not(:disabled) {
+  background: var(--sk-primary-light);
+}
+
+.btn-secondary {
+  background: var(--sk-surface);
+  color: var(--sk-primary);
+  border: 1px solid var(--sk-primary);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(13, 71, 161, 0.06);
+  border-color: var(--sk-primary-light);
+  color: var(--sk-primary-light);
+}
+
+button:focus-visible,
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.25);
+  outline: none;
+}
+
+a { color: var(--sk-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--sk-primary); outline-offset: 2px; }
