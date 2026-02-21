@@ -27,6 +27,27 @@
   color: var(--sk-text);
   margin: 0;
   letter-spacing: -0.02em;
+  flex: 1;
+}
+
+.page-header .btn-danger {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: var(--sk-error);
+  border: none;
+  border-radius: var(--sk-radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.page-header .btn-danger:hover:not(:disabled) {
+  background: #9b1616;
+}
+.page-header .btn-danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .sections-grid {
@@ -221,4 +242,30 @@
 .list .remove:hover {
   color: var(--sk-error);
   background: var(--sk-error-bg);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .page-header .btn-danger {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.25rem;
+    min-height: var(--sk-touch, 44px);
+    font-size: 1rem;
+  }
+  .sections-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .add-row input {
+    min-height: var(--sk-touch, 44px);
+    font-size: 1rem;
+  }
+  .add-row .btn-secondary { min-height: var(--sk-touch, 44px); font-size: 1rem; }
+  .section-head h2 { font-size: 1rem; }
+  .list li { padding: 0.75rem 1rem; font-size: 1rem; }
+  .list .remove { min-height: 36px; padding: 0.4rem 0.75rem; font-size: 0.9375rem; }
 }

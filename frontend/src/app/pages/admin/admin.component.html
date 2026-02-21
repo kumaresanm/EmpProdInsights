@@ -2,6 +2,9 @@
   <header class="page-header">
     <a routerLink="/dashboard" class="back">← Dashboard</a>
     <h1>Administration</h1>
+    <button type="button" class="btn-danger" (click)="deleteAllData()" [disabled]="deletingAll()" title="Delete all production entries and clear Machines, Employees, Programs">
+      {{ deletingAll() ? 'Deleting…' : 'Delete all data' }}
+    </button>
   </header>
   @if (error()) { <p class="error">{{ error() }}</p> }
   @if (message()) { <p class="success">{{ message() }}</p> }

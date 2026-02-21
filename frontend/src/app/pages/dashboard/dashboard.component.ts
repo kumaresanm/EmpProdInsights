@@ -32,7 +32,6 @@ export class DashboardComponent implements OnInit {
   filters = signal({
     dateFrom: '',
     dateTo: '',
-    month: '',
     employee: '',
     machine: '',
     shift: '',
@@ -88,13 +87,7 @@ export class DashboardComponent implements OnInit {
   }
 
   setFilter(key: string, value: string) {
-    const next: Record<string, string> = { [key]: value };
-    if (key === 'month' && value) {
-      const [y, m] = value.split('-').map(Number);
-      next['dateFrom'] = `${y}-${String(m).padStart(2, '0')}-01`;
-      next['dateTo'] = `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
-    }
-    this.filters.update(f => ({ ...f, ...next }));
+    this.filters.update(f => ({ ...f, [key]: value }));
     this.load();
   }
 

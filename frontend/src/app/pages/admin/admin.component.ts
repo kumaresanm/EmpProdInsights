@@ -20,6 +20,7 @@ export class AdminComponent implements OnInit {
   newProgram = signal('');
   error = signal<string | null>(null);
   message = signal<string | null>(null);
+  deletingAll = signal(false);
 
   ngOnInit() {
     this.load();
@@ -85,6 +86,24 @@ export class AdminComponent implements OnInit {
     this.api.removeProgram(name).subscribe({
       next: (list) => this.programs.set(list),
       error: (e) => this.error.set(this.getErrorMessage(e))
+    });
+  }
+
+  deleteAllData() {
+    if (!confirm('Delete ALL data? This will remove every production entry and clear Machines, Employees, and Programs. This cannot be undone.')) return;
+    this.error.set(null);
+    this.deletingAll.set(true);
+    this.api.deleteAllData().subscribe({
+      next: () => {
+        this.deletingAll.set(false);
+        this.load();
+        this.message.set('All data deleted');
+        setTimeout(() => this.message.set(null), 3000);
+      },
+      error: (e) => {
+        this.deletingAll.set(false);
+        this.error.set(this.getErrorMessage(e));
+      }
     });
   }
 

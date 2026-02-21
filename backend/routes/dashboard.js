@@ -4,9 +4,9 @@ const XLSX = require('xlsx');
 const { load, loadMachines, loadEmployees, DEFAULT_SHIFTS } = require('../db');
 
 /** Apply same filters as GET / to entries */
-function getFilteredEntries(req) {
+async function getFilteredEntries(req) {
   const { dateFrom, dateTo, employee, machine, shift, program_no } = req.query;
-  let entries = load();
+  let entries = await load();
   const today = new Date().toISOString().slice(0, 10);
   const from = dateFrom && String(dateFrom).trim() || today;
   const to = dateTo && String(dateTo).trim() || today;
@@ -29,9 +29,9 @@ function getFilteredEntries(req) {
   return entries;
 }
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const filteredRows = getFilteredEntries(req);
+    const filteredRows = await getFilteredEntries(req);
     const today = new Date().toISOString().slice(0, 10);
     const from = (req.query.dateFrom && String(req.query.dateFrom).trim()) || today;
     const to = (req.query.dateTo && String(req.query.dateTo).trim()) || today;
@@ -77,12 +77,10 @@ router.get('/', (req, res) => {
   }
 });
 
-router.get('/filters', (req, res) => {
+router.get('/filters', async (req, res) => {
   try {
-    const employees = loadEmployees();
-    const machines = loadMachines();
+    const [employees, machines, entries] = await Promise.all([loadEmployees(), loadMachines(), load()]);
     const shifts = DEFAULT_SHIFTS;
-    const entries = load();
     const programNos = [...new Set(entries.map(e => e.program_no).filter(Boolean))].sort();
     res.json({ employees, shifts, machines, program_nos: programNos });
   } catch (e) {
@@ -116,9 +114,9 @@ function rowToExportRow(e) {
   ];
 }
 
-router.get('/export', (req, res) => {
+router.get('/export', async (req, res) => {
   try {
-    const entries = getFilteredEntries(req);
+    const entries = await getFilteredEntries(req);
     entries.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.employee_name || '').localeCompare(b.employee_name || ''));
     const rows = [EXPORT_HEADERS, ...entries.map(rowToExportRow)];
     const ws = XLSX.utils.aoa_to_sheet(rows);

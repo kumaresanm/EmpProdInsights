@@ -4,7 +4,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
-const { load, save, computeDerived, addMachine, addEmployee } = require('../db');
+const { load, save, computeDerived, addMachine, addEmployee, addProgram } = require('../db');
 const { getSchema, listSchemas, mapHeaders, getMappedValue } = require('../import-schemas');
 
 const upload = multer({ dest: path.join(__dirname, '../uploads/'), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -19,7 +19,7 @@ router.get('/schemas', (req, res) => {
 });
 
 /** POST /api/upload – upload Excel. Query: ?type=production (default). Body: file */
-router.post('/', upload.single('file'), (req, res) => {
+router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const importType = (req.query.type || 'production').toLowerCase();
   const schema = getSchema(importType);
@@ -83,17 +83,19 @@ router.post('/', upload.single('file'), (req, res) => {
           notes: getMappedValue(row, 'notes', fieldToIndex, schema) || ''
         });
       }
-      const entries = load();
+      const entries = await load();
       let maxId = entries.reduce((m, e) => (e.id > m ? e.id : m), 0);
       toInsert.forEach(row => {
         maxId++;
         entries.push({ id: maxId, ...row });
       });
-      save(entries);
+      await save(entries);
       const machines = [...new Set(toInsert.map(e => e.machine).filter(Boolean))];
       const employees = [...new Set(toInsert.map(e => e.employee_name).filter(Boolean))];
-      machines.forEach(m => addMachine(m));
-      employees.forEach(e => addEmployee(e));
+      const programs = [...new Set(toInsert.map(e => e.program_no).filter(Boolean))];
+      for (const m of machines) await addMachine(m);
+      for (const e of employees) await addEmployee(e);
+      for (const p of programs) await addProgram(p);
       try { fs.unlinkSync(req.file.path); } catch (_) {}
       return res.json({
         imported: toInsert.length,

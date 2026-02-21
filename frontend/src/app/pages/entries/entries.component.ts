@@ -17,6 +17,7 @@ export class EntriesComponent implements OnInit {
   employees = signal<string[]>([]);
   shifts = signal<string[]>([]);
   machines = signal<string[]>([]);
+  programNos = signal<string[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   filters = signal({ dateFrom: '', dateTo: '', employee: '', shift: '', machine: '', program_no: '' });
@@ -27,6 +28,7 @@ export class EntriesComponent implements OnInit {
         this.employees.set(opts.employees);
         this.shifts.set(opts.shifts);
         this.machines.set(opts.machines);
+        this.programNos.set(opts.program_nos || []);
       },
       error: () => {}
     });

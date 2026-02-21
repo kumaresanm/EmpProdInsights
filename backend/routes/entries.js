@@ -4,9 +4,9 @@ const XLSX = require('xlsx');
 const { load, save, getNextId, computeDerived } = require('../db');
 
 /** Same filter logic as GET / – no default dates when empty */
-function getFilteredEntries(req) {
+async function getFilteredEntries(req) {
   const { dateFrom, dateTo, employee, shift, machine, program_no } = req.query;
-  let entries = load();
+  let entries = await load();
   if (dateFrom && String(dateFrom).trim()) entries = entries.filter(e => e.date >= dateFrom.trim());
   if (dateTo && String(dateTo).trim()) entries = entries.filter(e => e.date <= dateTo.trim());
   if (employee && String(employee).trim()) {
@@ -25,9 +25,9 @@ function getFilteredEntries(req) {
   return entries;
 }
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    let entries = getFilteredEntries(req);
+    let entries = await getFilteredEntries(req);
     entries.sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id));
     res.json(entries);
   } catch (e) {
@@ -61,9 +61,9 @@ function rowToExportRow(e) {
   ];
 }
 
-router.get('/export', (req, res) => {
+router.get('/export', async (req, res) => {
   try {
-    let entries = getFilteredEntries(req);
+    let entries = await getFilteredEntries(req);
     entries.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.employee_name || '').localeCompare(b.employee_name || ''));
     const rows = [EXPORT_HEADERS, ...entries.map(rowToExportRow)];
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -79,9 +79,9 @@ router.get('/export', (req, res) => {
   }
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const entries = load();
+    const entries = await load();
     const row = entries.find(e => String(e.id) === req.params.id);
     if (!row) return res.status(404).json({ error: 'Not found' });
     res.json(row);
@@ -90,7 +90,7 @@ router.get('/:id', (req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
       date, employee_name, shift, machine, program_no,
@@ -102,7 +102,7 @@ router.post('/', (req, res) => {
     const pr = pdn_req != null && pdn_req !== '' ? Number(pdn_req) : actualPdn;
     const pq = producted_qty != null && producted_qty !== '' ? Number(producted_qty) : null;
     const short = pq != null ? pr - pq : null;
-    const entries = load();
+    const entries = await load();
     const id = getNextId(entries);
     const row = {
       id, date, employee_name: employee_name || '', shift: shift || '', machine: machine || '', program_no: program_no || '',
@@ -110,14 +110,14 @@ router.post('/', (req, res) => {
       actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || ''
     };
     entries.push(row);
-    save(entries);
+    await save(entries);
     res.status(201).json(row);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const {
       date, employee_name, shift, machine, program_no,
@@ -129,7 +129,7 @@ router.put('/:id', (req, res) => {
     const pr = pdn_req != null && pdn_req !== '' ? Number(pdn_req) : actualPdn;
     const pq = producted_qty != null && producted_qty !== '' ? Number(producted_qty) : null;
     const short = pq != null ? pr - pq : null;
-    const entries = load();
+    const entries = await load();
     const idx = entries.findIndex(e => String(e.id) === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Not found' });
     const row = {
@@ -139,20 +139,20 @@ router.put('/:id', (req, res) => {
       actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || ''
     };
     entries[idx] = row;
-    save(entries);
+    await save(entries);
     res.json(row);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const entries = load();
+    const entries = await load();
     const idx = entries.findIndex(e => String(e.id) === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Not found' });
     entries.splice(idx, 1);
-    save(entries);
+    await save(entries);
     res.json({ deleted: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

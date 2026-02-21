@@ -73,6 +73,13 @@
   min-width: 8rem;
 }
 
+@media (max-width: 768px) {
+  .upload-box { padding: 1.25rem; }
+  .upload-box input[type="file"] { min-height: var(--sk-touch, 44px); font-size: 1rem; padding: 0.5rem 0; }
+  .btn { min-height: var(--sk-touch, 44px); font-size: 1rem; }
+  .page h1 { font-size: 1.25rem; }
+}
+
 .btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;

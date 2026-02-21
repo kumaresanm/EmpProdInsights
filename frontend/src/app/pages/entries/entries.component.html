@@ -21,7 +21,10 @@
       <option value="">All</option>
       @for (m of machines(); track m) { <option [value]="m">{{ m }}</option> }
     </select></label>
-    <label><span class="label-text">Program No</span><input type="text" [ngModel]="filters().program_no" (ngModelChange)="setFilter('program_no', $event)" placeholder="Filter by program" /></label>
+    <label><span class="label-text">Program No</span><select [ngModel]="filters().program_no" (ngModelChange)="setFilter('program_no', $event)">
+      <option value="">All</option>
+      @for (p of programNos(); track p) { <option [value]="p">{{ p }}</option> }
+    </select></label>
   </section>
   @if (error()) { <p class="error">{{ error() }}</p> }
   @if (loading()) {

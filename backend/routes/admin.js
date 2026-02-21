@@ -9,96 +9,110 @@ const {
   addEmployee,
   removeEmployee,
   addProgram,
-  removeProgram
+  removeProgram,
+  deleteAllData
 } = require('../db');
 
-router.get('/machines', (req, res) => {
+router.get('/machines', async (req, res) => {
   try {
-    res.json(loadMachines());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-router.post('/machines', (req, res) => {
-  try {
-    const raw = req.body && (req.body.name !== undefined ? req.body.name : req.body);
-    const name = raw != null ? String(raw).trim() : '';
-    if (!name) return res.status(400).json({ error: 'Name required' });
-    const list = addMachine(name);
-    res.status(201).json(list);
-  } catch (e) {
-    res.status(500).json({ error: e.message || 'Server error' });
-  }
-});
-
-router.delete('/machines/:name', (req, res) => {
-  try {
-    const name = decodeURIComponent(req.params.name);
-    const list = removeMachine(name);
+    const list = await loadMachines();
     res.json(list);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.get('/employees', (req, res) => {
-  try {
-    res.json(loadEmployees());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-router.post('/employees', (req, res) => {
+router.post('/machines', async (req, res) => {
   try {
     const raw = req.body && (req.body.name !== undefined ? req.body.name : req.body);
     const name = raw != null ? String(raw).trim() : '';
     if (!name) return res.status(400).json({ error: 'Name required' });
-    const list = addEmployee(name);
+    const list = await addMachine(name);
     res.status(201).json(list);
   } catch (e) {
     res.status(500).json({ error: e.message || 'Server error' });
   }
 });
 
-router.delete('/employees/:name', (req, res) => {
+router.delete('/machines/:name', async (req, res) => {
   try {
     const name = decodeURIComponent(req.params.name);
-    const list = removeEmployee(name);
+    const list = await removeMachine(name);
     res.json(list);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.get('/programs', (req, res) => {
+router.get('/employees', async (req, res) => {
   try {
-    res.json(loadPrograms());
+    const list = await loadEmployees();
+    res.json(list);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.post('/programs', (req, res) => {
+router.post('/employees', async (req, res) => {
   try {
     const raw = req.body && (req.body.name !== undefined ? req.body.name : req.body);
     const name = raw != null ? String(raw).trim() : '';
     if (!name) return res.status(400).json({ error: 'Name required' });
-    const list = addProgram(name);
+    const list = await addEmployee(name);
     res.status(201).json(list);
   } catch (e) {
     res.status(500).json({ error: e.message || 'Server error' });
   }
 });
 
-router.delete('/programs/:name', (req, res) => {
+router.delete('/employees/:name', async (req, res) => {
   try {
     const name = decodeURIComponent(req.params.name);
-    const list = removeProgram(name);
+    const list = await removeEmployee(name);
     res.json(list);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/programs', async (req, res) => {
+  try {
+    const list = await loadPrograms();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/programs', async (req, res) => {
+  try {
+    const raw = req.body && (req.body.name !== undefined ? req.body.name : req.body);
+    const name = raw != null ? String(raw).trim() : '';
+    if (!name) return res.status(400).json({ error: 'Name required' });
+    const list = await addProgram(name);
+    res.status(201).json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Server error' });
+  }
+});
+
+router.delete('/programs/:name', async (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name);
+    const list = await removeProgram(name);
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** DELETE /api/admin/data – delete all entries and clear machines, employees, programs (Admin only) */
+router.delete('/data', async (req, res) => {
+  try {
+    await deleteAllData();
+    res.json({ ok: true, message: 'All data deleted' });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed to delete data' });
   }
 });
 

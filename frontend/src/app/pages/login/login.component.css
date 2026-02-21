@@ -1,0 +1,80 @@
+.page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--sk-surface);
+  border-radius: var(--sk-radius);
+  box-shadow: var(--sk-shadow-card);
+  border: 1px solid var(--sk-border);
+  padding: 2rem;
+}
+
+.card h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--sk-text);
+}
+
+.card .subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.9375rem;
+  color: var(--sk-text-muted);
+}
+
+.card h2 {
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--sk-text);
+}
+
+.card .label-text {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sk-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.card label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.card input {
+  width: 100%;
+}
+
+.card .btn {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.card .error {
+  color: var(--sk-error);
+  font-size: 0.9375rem;
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 0;
+}
+
+.card .link {
+  display: block;
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: var(--sk-primary);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  padding: 0;
+}
+
+.card .link:hover {
+  text-decoration: underline;
+}

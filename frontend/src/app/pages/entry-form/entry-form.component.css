@@ -68,6 +68,15 @@
   min-width: 6rem;
 }
 
+@media (max-width: 768px) {
+  .form .grid { grid-template-columns: 1fr; gap: 1rem; }
+  .form { padding: 1.25rem; }
+  .form .field input,
+  .form .field select { min-height: var(--sk-touch, 44px); font-size: 1rem; }
+  .actions button { min-height: var(--sk-touch, 44px); font-size: 1rem; }
+  .page h1 { font-size: 1.25rem; }
+}
+
 .btn-link {
   font-size: 0.9375rem;
   font-weight: 500;

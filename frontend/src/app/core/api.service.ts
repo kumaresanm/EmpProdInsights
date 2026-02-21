@@ -161,4 +161,9 @@ export class ApiService {
   removeProgram(name: string) {
     return this.http.delete<string[]>(`${API}/admin/programs/${encodeURIComponent(name)}`);
   }
+
+  /** Delete all entries and clear machines, employees, programs. Admin only. */
+  deleteAllData() {
+    return this.http.delete<{ ok: boolean; message: string }>(`${API}/admin/data`);
+  }
 }

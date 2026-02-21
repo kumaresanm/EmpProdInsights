@@ -1,13 +1,29 @@
-<header class="app-header">
+<header class="app-header" [class.nav-open]="navOpen()">
   <div class="header-inner">
-    <h1 class="brand">SK Engineering</h1>
+    <div class="brand-row">
+      <h1 class="brand">SK Engineering</h1>
+      @if (configLoaded()) {
+        <button type="button" class="nav-toggle" (click)="toggleNav()" [attr.aria-expanded]="navOpen()" aria-label="Toggle menu">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+      }
+    </div>
     <p class="tagline">Production Output</p>
-    <nav class="nav">
-      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/entries" routerLinkActive="active">Entries</a>
-      <a routerLink="/upload" routerLinkActive="active">Import Excel</a>
-      <a routerLink="/admin" routerLinkActive="active">Admin</a>
-    </nav>
+    @if (configLoaded()) {
+      <nav class="nav">
+        @if (!useAuth() || isLoggedIn()) {
+          <a routerLink="/dashboard" routerLinkActive="active" (click)="closeNav()">Dashboard</a>
+          <a routerLink="/entries" routerLinkActive="active" (click)="closeNav()">Entries</a>
+          <a routerLink="/upload" routerLinkActive="active" (click)="closeNav()">Import Excel</a>
+          <a routerLink="/admin" routerLinkActive="active" (click)="closeNav()">Admin</a>
+          @if (useAuth() && isLoggedIn()) {
+            <button type="button" class="nav-signout" (click)="signOut(); closeNav()">Sign out</button>
+          }
+        }
+      </nav>
+    }
   </div>
 </header>
 <main class="app-main">

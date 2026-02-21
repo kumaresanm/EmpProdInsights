@@ -8,9 +8,6 @@
 
   <section class="filters-bar">
     <div class="filters-inner">
-      <label><span class="label-text">Month</span>
-        <input type="month" [ngModel]="filters().month" (ngModelChange)="setFilter('month', $event)" />
-      </label>
       <label><span class="label-text">From</span>
         <input type="date" [ngModel]="filters().dateFrom" (ngModelChange)="setFilter('dateFrom', $event)" />
       </label>

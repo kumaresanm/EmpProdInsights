@@ -1,4 +1,4 @@
-/* SK Engineering – Production Output (MNC-ready) */
+/* SK Engineering – Production Output (MNC-ready); mobile-friendly overrides below */
 :root {
   --sk-primary: #0d47a1;
   --sk-primary-dark: #063970;
@@ -21,9 +21,12 @@
   --sk-radius-sm: 6px;
   --sk-transition: 0.2s ease;
   --font-sans: 'Segoe UI', 'Helvetica Neue', system-ui, -apple-system, sans-serif;
+  --sk-touch: 44px;
 }
 
 * { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
@@ -36,11 +39,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Global form controls – inputs and dropdowns */
+/* Global form controls – desktop (original) */
 input[type="text"],
 input[type="number"],
 input[type="date"],
 input[type="email"],
+input[type="password"],
+input[type="month"],
 select {
   width: 100%;
   padding: 0.625rem 0.75rem;
@@ -65,7 +70,9 @@ select {
 input[type="text"],
 input[type="number"],
 input[type="date"],
-input[type="email"] {
+input[type="email"],
+input[type="password"],
+input[type="month"] {
   background-image: none;
   padding-right: 0.75rem;
 }
@@ -83,7 +90,7 @@ select option {
   background: var(--sk-surface);
 }
 
-/* Buttons */
+/* Buttons – desktop (original) */
 button,
 .btn {
   padding: 0.625rem 1.25rem;
@@ -134,3 +141,33 @@ button:focus-visible,
 a { color: var(--sk-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 a:focus-visible { outline: 2px solid var(--sk-primary); outline-offset: 2px; }
+
+/* Mobile: larger touch targets and 16px inputs (avoids iOS zoom) */
+@media (max-width: 768px) {
+  body { font-size: 16px; line-height: 1.6; }
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"],
+  input[type="month"],
+  select {
+    min-height: var(--sk-touch);
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-width: 2px;
+  }
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"],
+  input[type="month"] { padding-right: 1rem; }
+  select { padding-right: 2.5rem; background-position: right 1rem center; }
+  button, .btn {
+    min-height: var(--sk-touch);
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+  }
+  .page, [class*="page"] { padding: 0 0.5rem; }
+}
