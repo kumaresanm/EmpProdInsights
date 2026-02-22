@@ -22,7 +22,7 @@ export class AuthService {
     this.supabase.auth.onAuthStateChange((_e: AuthChangeEvent, session: Session | null) => this.sessionSig.set(session));
   }
 
-  async signIn(email: string, password: string): Promise<{ error?: string }> {
+  async signIn(email: string, password: string): Promise<{ error?: string; needsConfirmation?: boolean }> {
     if (!this.supabase) return { error: 'Auth not configured' };
     const { error } = await this.supabase.auth.signInWithPassword({ email, password });
     return error ? { error: error.message } : {};
