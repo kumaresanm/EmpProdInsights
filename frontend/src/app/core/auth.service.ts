@@ -28,10 +28,17 @@ export class AuthService {
     return error ? { error: error.message } : {};
   }
 
-  async signUp(email: string, password: string): Promise<{ error?: string }> {
+  async signUp(email: string, password: string): Promise<{ error?: string; needsConfirmation?: boolean }> {
     if (!this.supabase) return { error: 'Auth not configured' };
-    const { error } = await this.supabase.auth.signUp({ email, password });
-    return error ? { error: error.message } : {};
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined;
+    const { data, error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined
+    });
+    if (error) return { error: error.message };
+    const needsConfirmation = !!data.user && !data.session;
+    return needsConfirmation ? { needsConfirmation: true } : {};
   }
 
   async signOut(): Promise<void> {

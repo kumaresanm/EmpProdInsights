@@ -64,6 +64,16 @@
   padding: 0.5rem 0;
 }
 
+.card .success {
+  color: var(--sk-success);
+  font-size: 0.9375rem;
+  margin: 0 0 1rem 0;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  background: var(--sk-success-bg);
+  border-radius: var(--sk-radius-sm);
+  border-left: 4px solid var(--sk-success);
+}
+
 .card .link {
   display: block;
   margin-top: 1rem;

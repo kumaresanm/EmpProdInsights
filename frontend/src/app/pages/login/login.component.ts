@@ -19,6 +19,7 @@ export class LoginComponent implements OnInit {
   password = signal('');
   isSignUp = signal(false);
   error = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
   loading = signal(false);
   useAuth = signal(false);
 
@@ -37,6 +38,7 @@ export class LoginComponent implements OnInit {
       return;
     }
     this.error.set(null);
+    this.successMessage.set(null);
     this.loading.set(true);
     try {
       const result = this.isSignUp()
@@ -44,6 +46,10 @@ export class LoginComponent implements OnInit {
         : await this.auth.signIn(email, password);
       if (result.error) {
         this.error.set(result.error);
+        return;
+      }
+      if (result.needsConfirmation) {
+        this.successMessage.set('Check your email and click the confirmation link to sign in.');
         return;
       }
       this.router.navigate(['/dashboard']);
@@ -55,5 +61,6 @@ export class LoginComponent implements OnInit {
   toggleMode() {
     this.isSignUp.update(v => !v);
     this.error.set(null);
+    this.successMessage.set(null);
   }
 }
