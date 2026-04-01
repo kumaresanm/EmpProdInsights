@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ApiService, ProductionEntry } from '../../core/api.service';
+import { ApiService, ProductionEntry, DayEvent } from '../../core/api.service';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -18,9 +18,21 @@ export class EntriesComponent implements OnInit {
   shifts = signal<string[]>([]);
   machines = signal<string[]>([]);
   programNos = signal<string[]>([]);
+  dayEvents = signal<DayEvent[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   filters = signal({ dateFrom: '', dateTo: '', employee: '', shift: '', machine: '', program_no: '' });
+
+  /** date YYYY-MM-DD -> { summary, detail } for table + title */
+  dayEventByDate = computed(() => {
+    const m = new Map<string, { summary: string; detail: string }>();
+    for (const ev of this.dayEvents()) {
+      const d = (ev.date || '').slice(0, 10);
+      if (!d) continue;
+      m.set(d, { summary: ev.summary || '', detail: (ev.detail || '').trim() });
+    }
+    return m;
+  });
 
   ngOnInit() {
     this.api.getFilterOptions().subscribe({
@@ -31,6 +43,10 @@ export class EntriesComponent implements OnInit {
         this.programNos.set(opts.program_nos || []);
       },
       error: () => {}
+    });
+    this.api.getDayEvents().subscribe({
+      next: (list) => this.dayEvents.set(list || []),
+      error: () => this.dayEvents.set([])
     });
     this.load();
   }
@@ -80,5 +96,22 @@ export class EntriesComponent implements OnInit {
       },
       error: (e) => this.error.set(e?.error?.error || e?.message || 'Export failed')
     });
+  }
+
+  dayEventForRow(entryDate: string | undefined): { summary: string; detail: string } | null {
+    if (!entryDate) return null;
+    const d = entryDate.slice(0, 10);
+    return this.dayEventByDate().get(d) ?? null;
+  }
+
+  /** Display stored seconds as minutes + seconds for the table. */
+  formatCycleDisplay(sec: unknown): string {
+    const s = Number(sec);
+    if (!Number.isFinite(s) || s <= 0) return '—';
+    const m = Math.floor(s / 60);
+    const rem = Math.round((s - m * 60) * 100) / 100;
+    const remStr = String(rem);
+    if (m <= 0) return `${remStr}s`;
+    return `${m}m ${remStr}s`;
   }
 }

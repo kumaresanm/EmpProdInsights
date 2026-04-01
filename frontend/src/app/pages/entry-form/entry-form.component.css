@@ -55,6 +55,79 @@
   grid-column: 1 / -1;
 }
 
+.cycle-field {
+  grid-column: 1 / -1;
+}
+
+.cycle-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.cycle-part {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+
+.cycle-part .sublabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sk-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.cycle-total {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.8125rem;
+}
+
+.shift-hours-field {
+  grid-column: 1 / -1;
+}
+
+/* Grid: equal-width From/To (native time inputs differ in min-width for AM vs PM). */
+.shift-hours-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(5.75rem, 7rem);
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  align-items: end;
+}
+
+.shift-hours-row .time-pair {
+  min-width: 0;
+  display: block;
+}
+
+.shift-hours-row .hours-inline {
+  display: block;
+}
+
+.shift-hours-row input[type="time"],
+.shift-hours-row input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.shift-hours-row .sublabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sk-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.shift-hours-hint {
+  margin: 0.4rem 0 0 0;
+  font-size: 0.8125rem;
+  color: var(--sk-text-muted);
+  font-weight: 400;
+}
+
 .actions {
   display: flex;
   gap: 1rem;
@@ -75,6 +148,13 @@
   .form .field select { min-height: var(--sk-touch, 44px); font-size: 1rem; }
   .actions button { min-height: var(--sk-touch, 44px); font-size: 1rem; }
   .page h1 { font-size: 1.25rem; }
+  .shift-hours-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .shift-hours-row .hours-inline {
+    grid-column: 1 / -1;
+  }
 }
 
 .btn-link {

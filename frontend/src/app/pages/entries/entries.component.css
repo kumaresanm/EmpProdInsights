@@ -122,6 +122,16 @@ td.notes-cell {
   word-break: break-word;
 }
 
+td.day-event-cell {
+  max-width: 160px;
+  font-size: 0.875rem;
+  color: var(--sk-text);
+}
+
+td.day-event-cell .muted {
+  color: var(--sk-text-muted);
+}
+
 .link {
   background: none;
   border: none;
@@ -162,7 +172,7 @@ td.notes-cell {
   .filters label { min-width: 100%; }
   .filters input, .filters select { min-width: 0; min-height: var(--sk-touch, 44px); font-size: 1rem; }
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.5rem; border-radius: 0; }
-  table { font-size: 0.9375rem; min-width: 720px; }
+  table { font-size: 0.9375rem; min-width: 820px; }
   th, td { padding: 0.75rem 0.5rem; }
   th { font-size: 0.75rem; }
   td.notes-cell { max-width: 120px; }

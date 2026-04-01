@@ -30,26 +30,6 @@
   flex: 1;
 }
 
-.page-header .btn-danger {
-  margin-left: auto;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #fff;
-  background: var(--sk-error);
-  border: none;
-  border-radius: var(--sk-radius-sm);
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-}
-.page-header .btn-danger:hover:not(:disabled) {
-  background: #9b1616;
-}
-.page-header .btn-danger:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
 .sections-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -244,17 +224,65 @@
   background: var(--sk-error-bg);
 }
 
+.section-day-events {
+  margin-top: 2rem;
+  grid-column: 1 / -1;
+}
+
+.day-events-hint {
+  margin: 0 1.5rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--sk-text-muted);
+  line-height: 1.5;
+}
+
+.day-events-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  padding: 0 1.5rem 1.25rem;
+}
+
+.day-events-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 140px;
+}
+
+.day-events-form label.grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.day-events-form label.full {
+  flex: 1 1 100%;
+  min-width: 100%;
+}
+
+.day-events-form .label-text {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sk-text-muted);
+}
+
+.day-events-list .day-ev-detail {
+  font-size: 0.8125rem;
+  color: var(--sk-text-muted);
+  margin-left: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.day-events-list .list li {
+  flex-wrap: wrap;
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-wrap: wrap;
     gap: 0.75rem;
-  }
-  .page-header .btn-danger {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 0.25rem;
-    min-height: var(--sk-touch, 44px);
-    font-size: 1rem;
   }
   .sections-grid {
     grid-template-columns: 1fr;

@@ -35,11 +35,12 @@
         <thead>
           <tr>
             <th>Date</th>
+            <th>Day event</th>
             <th>Employee</th>
             <th>Shift</th>
             <th>Machine</th>
             <th>Program No</th>
-            <th>Cycle (s)</th>
+            <th>Cycle time</th>
             <th>Hrs worked</th>
             <th>Actual PDN (hrs)</th>
             <th>PDN Req</th>
@@ -53,11 +54,16 @@
           @for (e of entries(); track e.id) {
             <tr>
               <td>{{ e.date }}</td>
+              <td class="day-event-cell">
+                @if (dayEventForRow(e.date); as de) {
+                  <span [attr.title]="de.detail || de.summary">{{ de.summary }}</span>
+                } @else { <span class="muted">—</span> }
+              </td>
               <td>{{ e.employee_name }}</td>
               <td>{{ e.shift }}</td>
               <td>{{ e.machine }}</td>
               <td>{{ e.program_no }}</td>
-              <td>{{ e.cycle_time_sec }}</td>
+              <td>{{ formatCycleDisplay(e.cycle_time_sec) }}</td>
               <td>{{ e.hours_worked != null ? (e.hours_worked | number:'1.1-2') : '-' }}</td>
               <td>{{ (e.actual_hours ?? e.hours_worked) != null ? ((e.actual_hours ?? e.hours_worked) | number:'1.1-2') : '-' }}</td>
               <td>{{ e.pdn_req != null ? (e.pdn_req | number:'1.0-0') : '-' }}</td>

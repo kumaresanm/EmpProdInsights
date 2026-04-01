@@ -72,8 +72,6 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit() {
-    const today = new Date().toISOString().slice(0, 10);
-    this.filters.update(f => ({ ...f, dateFrom: today, dateTo: today }));
     this.api.getFilterOptions().subscribe({
       next: (opts) => {
         this.employees.set(opts.employees || []);
@@ -93,12 +91,10 @@ export class DashboardComponent implements OnInit {
 
   load() {
     const f = this.filters();
-    const dateFrom = f.dateFrom || new Date().toISOString().slice(0, 10);
-    const dateTo = f.dateTo || new Date().toISOString().slice(0, 10);
     this.loading.set(true);
     this.api.getDashboard({
-      dateFrom,
-      dateTo,
+      dateFrom: f.dateFrom?.trim() || undefined,
+      dateTo: f.dateTo?.trim() || undefined,
       employee: f.employee || undefined,
       machine: f.machine || undefined,
       shift: f.shift || undefined,

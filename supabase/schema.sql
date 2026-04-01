@@ -16,8 +16,13 @@ CREATE TABLE IF NOT EXISTS entries (
   pdn_req NUMERIC,
   producted_qty NUMERIC,
   short NUMERIC,
-  notes TEXT NOT NULL DEFAULT ''
+  notes TEXT NOT NULL DEFAULT '',
+  time_from TEXT,
+  time_to TEXT
 );
+
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS time_from TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS time_to TEXT;
 
 -- Config: machines, employees, programs (key = name, value = json array of strings)
 CREATE TABLE IF NOT EXISTS config (
@@ -29,7 +34,8 @@ CREATE TABLE IF NOT EXISTS config (
 INSERT INTO config (key, value) VALUES
   ('machines', '[]'::jsonb),
   ('employees', '[]'::jsonb),
-  ('programs', '[]'::jsonb)
+  ('programs', '[]'::jsonb),
+  ('day_events', '[]'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
 -- Optional: enable RLS so only authenticated users can read/write (if you use Supabase client from frontend)

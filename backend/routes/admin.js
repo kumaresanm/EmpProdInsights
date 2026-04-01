@@ -10,7 +10,9 @@ const {
   removeEmployee,
   addProgram,
   removeProgram,
-  deleteAllData
+  loadDayEvents,
+  upsertDayEvent,
+  removeDayEvent
 } = require('../db');
 
 router.get('/machines', async (req, res) => {
@@ -106,14 +108,43 @@ router.delete('/programs/:name', async (req, res) => {
   }
 });
 
-/** DELETE /api/admin/data – delete all entries and clear machines, employees, programs (Admin only) */
-router.delete('/data', async (req, res) => {
+/** GET /api/admin/day-events — same as public list (for admin UI refresh) */
+router.get('/day-events', async (req, res) => {
   try {
-    await deleteAllData();
-    res.json({ ok: true, message: 'All data deleted' });
+    const list = await loadDayEvents();
+    res.json(list);
   } catch (e) {
-    res.status(500).json({ error: e.message || 'Failed to delete data' });
+    res.status(500).json({ error: e.message });
   }
+});
+
+/** POST /api/admin/day-events — one event per calendar date; replaces existing for that date */
+router.post('/day-events', async (req, res) => {
+  try {
+    const { date, summary, detail } = req.body || {};
+    const list = await upsertDayEvent({ date, summary, detail });
+    res.status(201).json(list);
+  } catch (e) {
+    const msg = e.message || 'Failed';
+    const code = /required|Invalid/i.test(msg) ? 400 : 500;
+    res.status(code).json({ error: msg });
+  }
+});
+
+/** DELETE /api/admin/day-events/:date — remove day event (date YYYY-MM-DD) */
+router.delete('/day-events/:date', async (req, res) => {
+  try {
+    const date = decodeURIComponent(req.params.date);
+    const list = await removeDayEvent(date);
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/** DELETE /api/admin/data – disabled (bulk wipe removed to prevent accidental data loss) */
+router.delete('/data', (_req, res) => {
+  res.status(403).json({ error: 'Delete all data is disabled' });
 });
 
 module.exports = router;

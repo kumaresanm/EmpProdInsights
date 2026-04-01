@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { normalizeDate, parseDayEventsList } = require('./day-events-store');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -29,6 +30,16 @@ async function setConfig(key, arr) {
   await supabase.from('config').upsert({ key, value: arr || [] }, { onConflict: 'key' });
 }
 
+async function loadDayEventsFromConfig() {
+  const { data, error } = await supabase.from('config').select('value').eq('key', 'day_events').single();
+  if (error && error.code !== 'PGRST116') throw error;
+  return parseDayEventsList(data?.value);
+}
+
+async function saveDayEventsToConfig(list) {
+  await supabase.from('config').upsert({ key: 'day_events', value: list || [] }, { onConflict: 'key' });
+}
+
 async function load() {
   const { data, error } = await supabase.from('entries').select('*').order('id', { ascending: true });
   if (error) throw error;
@@ -53,7 +64,9 @@ async function save(entries) {
     pdn_req: e.pdn_req,
     producted_qty: e.producted_qty,
     short: e.short,
-    notes: e.notes || ''
+    notes: e.notes || '',
+    time_from: e.time_from != null && String(e.time_from).trim() !== '' ? String(e.time_from).trim() : null,
+    time_to: e.time_to != null && String(e.time_to).trim() !== '' ? String(e.time_to).trim() : null
   }));
   const { error } = await supabase.from('entries').insert(rows);
   if (error) throw error;
@@ -151,6 +164,31 @@ async function deleteAllData() {
   await setConfig('machines', []);
   await setConfig('employees', []);
   await setConfig('programs', []);
+  await saveDayEventsToConfig([]);
+}
+
+async function loadDayEvents() {
+  return loadDayEventsFromConfig();
+}
+
+async function upsertDayEvent({ date, summary, detail }) {
+  const d = normalizeDate(date);
+  if (!d) throw new Error('Invalid date');
+  const sum = (summary || '').trim();
+  if (!sum) throw new Error('Summary required');
+  const list = await loadDayEventsFromConfig();
+  const rest = list.filter(e => e.date !== d);
+  rest.push({ id: Date.now(), date: d, summary: sum, detail: (detail || '').trim() });
+  rest.sort((a, b) => a.date.localeCompare(b.date));
+  await saveDayEventsToConfig(rest);
+  return rest;
+}
+
+async function removeDayEvent(date) {
+  const d = normalizeDate(date);
+  const list = (await loadDayEventsFromConfig()).filter(e => e.date !== d);
+  await saveDayEventsToConfig(list);
+  return list;
 }
 
 function getNextId(entries) {
@@ -175,6 +213,9 @@ module.exports = {
   loadAll,
   saveAll,
   deleteAllData,
+  loadDayEvents,
+  upsertDayEvent,
+  removeDayEvent,
   loadMachines,
   loadEmployees,
   loadPrograms,

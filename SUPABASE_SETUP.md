@@ -13,7 +13,14 @@ Use this when you want **persistent data** and **login/signup** instead of file-
 1. In the Supabase dashboard, open **SQL Editor**.
 2. Copy the contents of **`supabase/schema.sql`** in this repo.
 3. Paste into a new query and click **Run**.  
-   This creates the `entries` and `config` tables and seeds `config` with `machines`, `employees`, `programs`.
+   This creates the `entries` and `config` tables and seeds `config` with `machines`, `employees`, `programs`, and `day_events`.
+
+If your project was created before **day events** existed, run once in SQL Editor:
+
+```sql
+INSERT INTO config (key, value) VALUES ('day_events', '[]'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+```
 
 ## 3. Get your keys
 
@@ -35,12 +42,20 @@ Set these **environment variables** (e.g. on Render: **Environment**):
 
 Redeploy the backend so it picks them up.
 
-## 5. Enable email auth (optional)
+## 5. Enable email auth and set redirect URLs
 
 In Supabase: **Authentication** → **Providers** → **Email**:
 
 - Enable **Email** if you want email/password sign-in (default).
 - For development you can disable **Confirm email** so sign-up works without verification.
+
+**Important – email confirmation redirect:**  
+Go to **Authentication** → **URL Configuration**:
+
+- **Site URL**: Set to your **production app URL** (e.g. `https://your-app.onrender.com`). This is the default redirect after “Confirm email” and similar links.
+- **Redirect URLs**: Add your production URL and, if you test locally, `http://localhost:4200` (Angular dev server). Supabase only redirects to URLs listed here.
+
+If Site URL or Redirect URLs point to localhost, users who sign up from production will get a confirmation link that sends them to localhost. Set them to your live app URL so the link opens the correct site.
 
 ## 6. Behaviour
 

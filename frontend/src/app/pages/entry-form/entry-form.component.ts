@@ -1,12 +1,31 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { ApiService, ProductionEntry } from '../../core/api.service';
+
+/** Parse HH:mm (or HH:mm:ss) to decimal hours duration; if end ≤ start, treat end as next day. */
+function hoursBetween(from: string, to: string): number {
+  const parse = (t: string): number | null => {
+    const parts = String(t || '').trim().split(':');
+    if (!parts[0]) return null;
+    const h = Number(parts[0]);
+    const m = Number(parts[1] != null ? parts[1] : 0);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+    return h * 60 + m;
+  };
+  const a = parse(from);
+  const b = parse(to);
+  if (a == null || b == null) return NaN;
+  let end = b;
+  if (end <= a) end += 24 * 60;
+  return (end - a) / 60;
+}
 
 @Component({
   selector: 'app-entry-form',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, DecimalPipe],
   templateUrl: './entry-form.component.html',
   styleUrl: './entry-form.component.css'
 })
@@ -32,6 +51,12 @@ export class EntryFormComponent implements OnInit {
   employees = signal<string[]>([]);
   shifts = signal<string[]>([]);
   machines = signal<string[]>([]);
+  /** From / To; when both set, hours_worked is updated (can still override in Hours field). */
+  timeFrom = signal('');
+  timeTo = signal('');
+  /** UI split of cycle_time_sec (still stored as total seconds in API). */
+  cycleMins = signal(0);
+  cycleSecs = signal(0);
 
   employeeOptions = computed(() => {
     const list = this.employees();
@@ -71,20 +96,91 @@ export class EntryFormComponent implements OnInit {
       const id = +idParam;
       this.id.set(id);
       this.api.getEntry(id).subscribe({
-        next: (e) => this.model.set({ ...e }),
+        next: (e) => {
+          this.model.set({ ...e });
+          this.hydrateCycleFromModel();
+          this.timeFrom.set('');
+          this.timeTo.set('');
+        },
         error: (err) => this.error.set(err?.error?.error || 'Not found')
       });
+    } else {
+      this.hydrateCycleFromModel();
+      this.timeFrom.set('08:00');
+      this.timeTo.set('20:00');
+      this.syncHoursFromTimes();
     }
   }
 
   updateField(key: keyof ProductionEntry, value: unknown) {
+    if (key === 'hours_worked') {
+      const n = value === '' || value == null ? NaN : Number(value);
+      this.model.update(m => ({
+        ...m,
+        hours_worked: Number.isFinite(n) ? Math.round(n * 100) / 100 : m.hours_worked
+      }));
+      return;
+    }
     this.model.update(m => ({ ...m, [key]: value }));
+  }
+
+  setCycleMins(v: unknown) {
+    const n = v === '' || v == null ? 0 : Number(v);
+    this.cycleMins.set(Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0);
+    this.applyCycleToModel();
+  }
+
+  setCycleSecs(v: unknown) {
+    const n = v === '' || v == null ? 0 : Number(v);
+    this.cycleSecs.set(Number.isFinite(n) && n >= 0 ? n : 0);
+    this.applyCycleToModel();
+  }
+
+  private applyCycleToModel() {
+    const total = this.cycleMins() * 60 + this.cycleSecs();
+    const rounded = Math.round(total * 100) / 100;
+    this.model.update(m => ({ ...m, cycle_time_sec: rounded }));
+  }
+
+  private hydrateCycleFromModel() {
+    const ct = Number(this.model().cycle_time_sec);
+    if (!Number.isFinite(ct) || ct < 0) {
+      this.cycleMins.set(0);
+      this.cycleSecs.set(0);
+      return;
+    }
+    const mins = Math.floor(ct / 60);
+    const secs = Math.round((ct - mins * 60) * 100) / 100;
+    this.cycleMins.set(mins);
+    this.cycleSecs.set(secs);
+  }
+
+  setTimeFrom(v: string) {
+    this.timeFrom.set(v || '');
+    this.syncHoursFromTimes();
+  }
+
+  setTimeTo(v: string) {
+    this.timeTo.set(v || '');
+    this.syncHoursFromTimes();
+  }
+
+  /** When both From and To are set, updates hours_worked; otherwise leaves hours unchanged (e.g. loaded entry). */
+  syncHoursFromTimes(): void {
+    const from = this.timeFrom().trim();
+    const to = this.timeTo().trim();
+    if (!from || !to) return;
+    const hw = hoursBetween(from, to);
+    if (!Number.isFinite(hw) || hw <= 0) return;
+    this.model.update(m => ({ ...m, hours_worked: Math.round(hw * 100) / 100 }));
   }
 
   submit() {
     const m = this.model();
-    if (!m.date || !m.employee_name || !m.cycle_time_sec || m.cycle_time_sec <= 0 || !m.hours_worked) {
-      this.error.set('Fill date, employee name, cycle time and hours worked.');
+    const hw = Number(m.hours_worked);
+    const ct = Number(m.cycle_time_sec);
+    if (!m.date || !m.employee_name || !Number.isFinite(ct) || ct <= 0 || !Number.isFinite(hw) || hw <= 0) {
+      this.error.set('Fill date, employee name, cycle time (min + sec), and hours worked.');
       return;
     }
     this.saving.set(true);
@@ -96,8 +192,8 @@ export class EntryFormComponent implements OnInit {
       shift: m.shift || '',
       machine: m.machine || '',
       program_no: m.program_no || '',
-      cycle_time_sec: m.cycle_time_sec,
-      hours_worked: m.hours_worked,
+      cycle_time_sec: ct,
+      hours_worked: hw,
       pdn_req: pdnReq,
       producted_qty: m.producted_qty ?? null,
       notes: m.notes || ''

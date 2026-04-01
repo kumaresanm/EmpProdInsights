@@ -36,6 +36,14 @@ export interface FilterOptions {
   program_nos: string[];
 }
 
+/** One record per calendar date — applies to all production entries that day (e.g. power cut). */
+export interface DayEvent {
+  id: number;
+  date: string;
+  summary: string;
+  detail?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   constructor(private http: HttpClient) {}
@@ -162,8 +170,15 @@ export class ApiService {
     return this.http.delete<string[]>(`${API}/admin/programs/${encodeURIComponent(name)}`);
   }
 
-  /** Delete all entries and clear machines, employees, programs. Admin only. */
-  deleteAllData() {
-    return this.http.delete<{ ok: boolean; message: string }>(`${API}/admin/data`);
+  getDayEvents() {
+    return this.http.get<DayEvent[]>(`${API}/day-events`);
+  }
+
+  upsertDayEvent(body: { date: string; summary: string; detail?: string }) {
+    return this.http.post<DayEvent[]>(`${API}/admin/day-events`, body);
+  }
+
+  deleteDayEvent(date: string) {
+    return this.http.delete<DayEvent[]>(`${API}/admin/day-events/${encodeURIComponent(date)}`);
   }
 }

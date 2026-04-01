@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { normalizeDate, parseDayEventsList } = require('./day-events-store');
 
 const dataPath = path.join(__dirname, 'data.json');
 
@@ -22,9 +23,10 @@ function loadAll() {
     if (programs.length === 0 && entries.length > 0) {
       programs = [...new Set(entries.map(e => e.program_no).filter(Boolean))].sort();
     }
-    return { entries, machines, employees, programs };
+    const day_events = parseDayEventsList(data.day_events);
+    return { entries, machines, employees, programs, day_events };
   } catch {
-    return { entries: [], machines: [], employees: [], programs: [] };
+    return { entries: [], machines: [], employees: [], programs: [], day_events: [] };
   }
 }
 
@@ -34,7 +36,8 @@ function saveAll(data) {
     entries: data.entries,
     machines: data.machines || [],
     employees: data.employees || [],
-    programs: data.programs || []
+    programs: data.programs || [],
+    day_events: data.day_events || []
   }, null, 2), 'utf8');
 }
 
@@ -112,7 +115,34 @@ function removeProgram(name) {
 }
 
 function deleteAllData() {
-  saveAll({ entries: [], machines: [], employees: [], programs: [] });
+  saveAll({ entries: [], machines: [], employees: [], programs: [], day_events: [] });
+}
+
+function loadDayEvents() {
+  return loadAll().day_events || [];
+}
+
+function upsertDayEvent({ date, summary, detail }) {
+  const d = normalizeDate(date);
+  if (!d) throw new Error('Invalid date');
+  const sum = (summary || '').trim();
+  if (!sum) throw new Error('Summary required');
+  const data = loadAll();
+  const list = parseDayEventsList(data.day_events);
+  const rest = list.filter(e => e.date !== d);
+  rest.push({ id: Date.now(), date: d, summary: sum, detail: (detail || '').trim() });
+  rest.sort((a, b) => a.date.localeCompare(b.date));
+  data.day_events = rest;
+  saveAll(data);
+  return rest;
+}
+
+function removeDayEvent(date) {
+  const d = normalizeDate(date);
+  const data = loadAll();
+  data.day_events = parseDayEventsList(data.day_events).filter(e => e.date !== d);
+  saveAll(data);
+  return data.day_events;
 }
 
 function getNextId(entries) {
@@ -137,6 +167,9 @@ module.exports = {
   loadAll,
   saveAll,
   deleteAllData,
+  loadDayEvents,
+  upsertDayEvent,
+  removeDayEvent,
   loadMachines,
   loadEmployees,
   loadPrograms,

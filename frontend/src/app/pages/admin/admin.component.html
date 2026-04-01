@@ -2,9 +2,6 @@
   <header class="page-header">
     <a routerLink="/dashboard" class="back">← Dashboard</a>
     <h1>Administration</h1>
-    <button type="button" class="btn-danger" (click)="deleteAllData()" [disabled]="deletingAll()" title="Delete all production entries and clear Machines, Employees, Programs">
-      {{ deletingAll() ? 'Deleting…' : 'Delete all data' }}
-    </button>
   </header>
   @if (error()) { <p class="error">{{ error() }}</p> }
   @if (message()) { <p class="success">{{ message() }}</p> }
@@ -94,4 +91,41 @@
       </div>
     </section>
   </div>
+
+  <section class="section section-day-events">
+    <div class="section-head">
+      <h2>Day events (whole site)</h2>
+    </div>
+    <p class="day-events-hint">For a major event on one calendar day (e.g. power cut), add it once here. It appears on every production entry for that date on the Entries screen—no need to edit each row.</p>
+    <div class="day-events-form">
+      <label><span class="label-text">Date</span>
+        <input type="date" [ngModel]="newDayEventDate()" (ngModelChange)="newDayEventDate.set($event)" />
+      </label>
+      <label class="grow"><span class="label-text">Summary</span>
+        <input type="text" [ngModel]="newDayEventSummary()" (ngModelChange)="newDayEventSummary.set($event)" placeholder="e.g. Power cut — 2 hrs" />
+      </label>
+      <label class="full"><span class="label-text">More detail (optional)</span>
+        <input type="text" [ngModel]="newDayEventDetail()" (ngModelChange)="newDayEventDetail.set($event)" placeholder="Optional notes shown on hover in Entries" />
+      </label>
+      <button type="button" class="btn-secondary" (click)="saveDayEvent()">Save / update for this date</button>
+    </div>
+    <div class="list-scroll day-events-list">
+      @if (dayEvents().length > 0) {
+        <ul class="list">
+          @for (ev of dayEvents(); track ev.id) {
+            <li>
+              <span class="item-name"><strong>{{ ev.date }}</strong> — {{ ev.summary }}</span>
+              @if (ev.detail) { <span class="day-ev-detail">{{ ev.detail }}</span> }
+              <button type="button" class="remove" (click)="removeDayEvent(ev.date)" title="Remove">Remove</button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="empty-state">
+          <p class="empty-label">No day events yet</p>
+          <p class="empty-hint">Add one when the whole site is affected on a given day.</p>
+        </div>
+      }
+    </div>
+  </section>
 </div>

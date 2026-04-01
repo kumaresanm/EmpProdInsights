@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../core/api.service';
+import { ApiService, DayEvent } from '../../core/api.service';
 
 @Component({
   selector: 'app-admin',
@@ -20,7 +20,10 @@ export class AdminComponent implements OnInit {
   newProgram = signal('');
   error = signal<string | null>(null);
   message = signal<string | null>(null);
-  deletingAll = signal(false);
+  dayEvents = signal<DayEvent[]>([]);
+  newDayEventDate = signal('');
+  newDayEventSummary = signal('');
+  newDayEventDetail = signal('');
 
   ngOnInit() {
     this.load();
@@ -30,6 +33,7 @@ export class AdminComponent implements OnInit {
     this.api.getMachines().subscribe({ next: (m) => this.machines.set(m), error: () => this.machines.set([]) });
     this.api.getEmployees().subscribe({ next: (e) => this.employees.set(e), error: () => this.employees.set([]) });
     this.api.getPrograms().subscribe({ next: (p) => this.programs.set(p), error: () => this.programs.set([]) });
+    this.api.getDayEvents().subscribe({ next: (d) => this.dayEvents.set(d || []), error: () => this.dayEvents.set([]) });
   }
 
   addMachine() {
@@ -89,21 +93,32 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  deleteAllData() {
-    if (!confirm('Delete ALL data? This will remove every production entry and clear Machines, Employees, and Programs. This cannot be undone.')) return;
+  saveDayEvent() {
+    const date = this.newDayEventDate().trim();
+    const summary = this.newDayEventSummary().trim();
+    if (!date || !summary) {
+      this.error.set('Enter date and a short summary (e.g. Power cut).');
+      return;
+    }
     this.error.set(null);
-    this.deletingAll.set(true);
-    this.api.deleteAllData().subscribe({
-      next: () => {
-        this.deletingAll.set(false);
-        this.load();
-        this.message.set('All data deleted');
-        setTimeout(() => this.message.set(null), 3000);
+    this.api.upsertDayEvent({ date, summary, detail: this.newDayEventDetail().trim() || undefined }).subscribe({
+      next: (list) => {
+        this.dayEvents.set(list);
+        this.newDayEventSummary.set('');
+        this.newDayEventDetail.set('');
+        this.message.set('Day event saved — it applies to all entries on that date.');
+        setTimeout(() => this.message.set(null), 3500);
       },
-      error: (e) => {
-        this.deletingAll.set(false);
-        this.error.set(this.getErrorMessage(e));
-      }
+      error: (e) => this.error.set(this.getErrorMessage(e))
+    });
+  }
+
+  removeDayEvent(date: string) {
+    if (!confirm(`Remove the day event for ${date}?`)) return;
+    this.error.set(null);
+    this.api.deleteDayEvent(date).subscribe({
+      next: (list) => this.dayEvents.set(list),
+      error: (e) => this.error.set(this.getErrorMessage(e))
     });
   }
 

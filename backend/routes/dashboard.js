@@ -3,14 +3,17 @@ const router = express.Router();
 const XLSX = require('xlsx');
 const { load, loadMachines, loadEmployees, DEFAULT_SHIFTS } = require('../db');
 
-/** Apply same filters as GET / to entries */
+/** Apply same filters as GET / to entries. Omit both dateFrom and dateTo to include all dates. */
 async function getFilteredEntries(req) {
   const { dateFrom, dateTo, employee, machine, shift, program_no } = req.query;
   let entries = await load();
-  const today = new Date().toISOString().slice(0, 10);
-  const from = dateFrom && String(dateFrom).trim() || today;
-  const to = dateTo && String(dateTo).trim() || today;
-  entries = entries.filter(e => e.date >= from && e.date <= to);
+  const from = dateFrom && String(dateFrom).trim();
+  const to = dateTo && String(dateTo).trim();
+  if (from || to) {
+    const lo = from || '0000-01-01';
+    const hi = to || '9999-12-31';
+    entries = entries.filter(e => e.date >= lo && e.date <= hi);
+  }
   if (employee && String(employee).trim()) {
     const q = String(employee).trim().toLowerCase();
     entries = entries.filter(e => (e.employee_name || '').toLowerCase().includes(q));
@@ -32,9 +35,18 @@ async function getFilteredEntries(req) {
 router.get('/', async (req, res) => {
   try {
     const filteredRows = await getFilteredEntries(req);
-    const today = new Date().toISOString().slice(0, 10);
-    const from = (req.query.dateFrom && String(req.query.dateFrom).trim()) || today;
-    const to = (req.query.dateTo && String(req.query.dateTo).trim()) || today;
+    const qFrom = req.query.dateFrom && String(req.query.dateFrom).trim();
+    const qTo = req.query.dateTo && String(req.query.dateTo).trim();
+    let from = qFrom;
+    let to = qTo;
+    if (!from && !to && filteredRows.length > 0) {
+      const dates = filteredRows.map(r => r.date).filter(Boolean).sort();
+      from = dates[0];
+      to = dates[dates.length - 1];
+    } else if (!from && !to) {
+      from = '';
+      to = '';
+    }
     filteredRows.sort((a, b) => (a.employee_name || '').localeCompare(b.employee_name || '') || (a.machine || '').localeCompare(b.machine || ''));
     const totalActualHours = filteredRows.reduce((s, r) => s + (r.actual_hours || 0), 0);
     const totalPdnReq = filteredRows.reduce((s, r) => s + (r.pdn_req != null ? r.pdn_req : 0), 0);

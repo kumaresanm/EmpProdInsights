@@ -43,6 +43,7 @@ body {
 input[type="text"],
 input[type="number"],
 input[type="date"],
+input[type="time"],
 input[type="email"],
 input[type="password"],
 input[type="month"],
@@ -70,6 +71,7 @@ select {
 input[type="text"],
 input[type="number"],
 input[type="date"],
+input[type="time"],
 input[type="email"],
 input[type="password"],
 input[type="month"] {
@@ -148,6 +150,7 @@ a:focus-visible { outline: 2px solid var(--sk-primary); outline-offset: 2px; }
   input[type="text"],
   input[type="number"],
   input[type="date"],
+  input[type="time"],
   input[type="email"],
   input[type="password"],
   input[type="month"],
@@ -160,6 +163,7 @@ a:focus-visible { outline: 2px solid var(--sk-primary); outline-offset: 2px; }
   input[type="text"],
   input[type="number"],
   input[type="date"],
+  input[type="time"],
   input[type="email"],
   input[type="password"],
   input[type="month"] { padding-right: 1rem; }

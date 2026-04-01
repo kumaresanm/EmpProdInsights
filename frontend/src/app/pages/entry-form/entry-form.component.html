@@ -33,17 +33,41 @@
         <span class="label-text">Program No.</span>
         <input type="text" [ngModel]="model().program_no" (ngModelChange)="updateField('program_no', $event)" name="program_no" />
       </label>
-      <label class="field">
-        <span class="label-text">Cycle time (sec)</span>
-        <input type="number" step="0.01" [ngModel]="model().cycle_time_sec" (ngModelChange)="updateField('cycle_time_sec', $event)" name="cycle_time_sec" required />
-      </label>
-      <label class="field">
-        <span class="label-text">Hours worked</span>
-        <input type="number" step="0.01" [ngModel]="model().hours_worked" (ngModelChange)="updateField('hours_worked', $event)" name="hours_worked" required />
-      </label>
+      <div class="field cycle-field">
+        <span class="label-text">Cycle time</span>
+        <div class="cycle-row">
+          <label class="cycle-part">
+            <span class="sublabel">Minutes</span>
+            <input type="number" min="0" step="1" [ngModel]="cycleMins()" (ngModelChange)="setCycleMins($event)" name="cycle_mins" />
+          </label>
+          <label class="cycle-part">
+            <span class="sublabel">Seconds</span>
+            <input type="number" min="0" step="0.01" [ngModel]="cycleSecs()" (ngModelChange)="setCycleSecs($event)" name="cycle_secs" />
+          </label>
+        </div>
+        <p class="muted cycle-total">Stored as {{ model().cycle_time_sec != null ? (model().cycle_time_sec | number:'1.2-2') : '0' }} s total for calculations.</p>
+      </div>
+      <div class="field shift-hours-field">
+        <span class="label-text">From · To · Hours worked</span>
+        <div class="shift-hours-row">
+          <label class="time-pair">
+            <span class="sublabel">From</span>
+            <input type="time" [ngModel]="timeFrom()" (ngModelChange)="setTimeFrom($event)" name="time_from" step="60" />
+          </label>
+          <label class="time-pair">
+            <span class="sublabel">To</span>
+            <input type="time" [ngModel]="timeTo()" (ngModelChange)="setTimeTo($event)" name="time_to" step="60" />
+          </label>
+          <label class="hours-inline">
+            <span class="sublabel">Hours</span>
+            <input type="number" step="0.01" min="0.01" [ngModel]="model().hours_worked" (ngModelChange)="updateField('hours_worked', $event)" name="hours_worked" />
+          </label>
+        </div>
+        <p class="muted shift-hours-hint">Both times update hours; you can edit hours anytime (changing From/To recalculates).</p>
+      </div>
       <label class="field">
         <span class="label-text">PDN Req (target)</span>
-        <input type="number" step="0.01" [ngModel]="model().pdn_req ?? expectedProduction()" (ngModelChange)="updateField('pdn_req', $event)" name="pdn_req" [placeholder]="expectedProduction() == null ? 'Enter cycle time and hours' : ''" />
+        <input type="number" step="0.01" [ngModel]="model().pdn_req ?? expectedProduction()" (ngModelChange)="updateField('pdn_req', $event)" name="pdn_req" [placeholder]="expectedProduction() == null ? 'Enter cycle time and hours worked' : ''" />
       </label>
       <label class="field">
         <span class="label-text">Produced qty</span>
@@ -59,5 +83,5 @@
       <a routerLink="/entries" class="btn-link">Cancel</a>
     </div>
   </form>
-  <p class="hint">Actual hours = hours worked × 11/12. PDN Req is auto-calculated (3600 ÷ cycle time × actual hours); you can override if needed. Produced qty is from the machine. Short = PDN Req − Produced (on save).</p>
+  <p class="hint">Cycle time is minutes + seconds (stored as seconds). Hours can come from From/To or the Hours worked field. Actual hours = hours worked × 11/12. PDN Req is auto-calculated (3600 ÷ cycle time × actual hours); you can override if needed. Produced qty is from the machine. Short = PDN Req − Produced (on save).</p>
 </div>

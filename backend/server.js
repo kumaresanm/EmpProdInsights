@@ -9,6 +9,7 @@ const entriesRouter = require('./routes/entries');
 const uploadRouter = require('./routes/upload');
 const dashboardRouter = require('./routes/dashboard');
 const adminRouter = require('./routes/admin');
+const dayEventsRouter = require('./routes/day-events');
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -32,6 +33,7 @@ app.get('/api/config', (req, res) => {
 app.use('/api/entries', requireAuth, entriesRouter);
 app.use('/api/upload', requireAuth, uploadRouter);
 app.use('/api/dashboard', requireAuth, dashboardRouter);
+app.use('/api/day-events', requireAuth, dayEventsRouter);
 app.use('/api/admin', requireAuth, adminRouter);
 
 // Serve built Angular app (for production deploy e.g. Render)
