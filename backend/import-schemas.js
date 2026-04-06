@@ -7,7 +7,7 @@ const SCHEMAS = {
   production: {
     id: 'production',
     label: 'Production entries',
-    description: 'Employee, shift, machine, cycle time, hours worked. In Excel, "Actual PDN" = hours employee actually worked. PDN Req, Produced qty optional.',
+    description: 'Employee, shift, machine, cycle time, login hours, actual working hours. PDN Req = (3600 ÷ cycle sec) × actual working hours unless overridden. Produced qty optional.',
     storeKey: 'entries',
     required: ['date', 'employee_name', 'cycle_time_sec', 'hours_worked'],
     columns: [
@@ -17,10 +17,11 @@ const SCHEMAS = {
       { key: 'machine', aliases: ['Machine', 'machine', 'Machine No', 'Machine No.'], type: 'string' },
       { key: 'program_no', aliases: ['Prg. No.', 'Prg No', 'program_no', 'Program No', 'Program No.', 'Program', 'program', 'Prg No.', 'Prg'], type: 'string' },
       { key: 'cycle_time_sec', aliases: ['Cycle time Sec', 'Cycle time', 'cycle_time_sec', 'Cycle time (sec)'], type: 'number' },
-      { key: 'hours_worked', aliases: ['PDN HR', 'hours_worked', 'Hours worked', 'Hours Worked'], type: 'number' },
-      { key: 'actual_hours', aliases: ['Actual PDN', 'Actual pdn', 'actual pdn', 'Actual PDN (hours)', 'Hours actually worked'], type: 'number' },
+      { key: 'hours_worked', aliases: ['Login (h)', 'PDN HR', 'hours_worked', 'Hours worked', 'Hours Worked'], type: 'number' },
+      { key: 'actual_hours', aliases: ['Actual work (h)', 'Actual PDN', 'Actual pdn', 'actual pdn', 'Actual PDN (hours)', 'Hours actually worked'], type: 'number' },
       { key: 'pdn_req', aliases: ['PDN Req', 'pdn_req', 'PDN Required'], type: 'number' },
       { key: 'producted_qty', aliases: ['PDN Actual Qty', 'PDN Actual qty', 'Producted Qty', 'producted_qty', 'Produced Qty', 'Produced qty'], type: 'number' },
+      { key: 'payment', aliases: ['Pay cycle (hrs)', 'Payment cycle (hrs)', 'Pay cycle', 'Payment cycle', 'Payment hrs', 'payment', 'Payment'], type: 'number' },
       { key: 'notes', aliases: ['Notes', 'notes', 'Remarks', 'remarks', 'Reason', 'reason'], type: 'string' }
     ]
   }

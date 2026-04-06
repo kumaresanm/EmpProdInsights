@@ -30,6 +30,26 @@
   flex: 1;
 }
 
+.page-header .btn-danger {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: var(--sk-error);
+  border: none;
+  border-radius: var(--sk-radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.page-header .btn-danger:hover:not(:disabled) {
+  background: #9b1616;
+}
+.page-header .btn-danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .sections-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -283,6 +303,12 @@
   .page-header {
     flex-wrap: wrap;
     gap: 0.75rem;
+  }
+  .page-header .btn-danger {
+    width: 100%;
+    margin-left: 0;
+    min-height: var(--sk-touch, 44px);
+    font-size: 1rem;
   }
   .sections-grid {
     grid-template-columns: 1fr;

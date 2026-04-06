@@ -45,9 +45,19 @@ function load() {
   return loadAll().entries;
 }
 
+/** Merge by id — never removes rows (only Admin → Delete all data can clear entries). */
 function save(entries) {
   const data = loadAll();
-  data.entries = entries;
+  const incoming = Array.isArray(entries) ? entries : [];
+  if (incoming.length === 0) return;
+  const byId = new Map();
+  for (const e of data.entries || []) {
+    byId.set(e.id, { ...e });
+  }
+  for (const e of incoming) {
+    byId.set(e.id, { ...e });
+  }
+  data.entries = Array.from(byId.values()).sort((a, b) => (a.id || 0) - (b.id || 0));
   saveAll(data);
 }
 
@@ -115,7 +125,13 @@ function removeProgram(name) {
 }
 
 function deleteAllData() {
-  saveAll({ entries: [], machines: [], employees: [], programs: [], day_events: [] });
+  saveAll({
+    entries: [],
+    machines: [],
+    employees: [],
+    programs: [],
+    day_events: []
+  });
 }
 
 function loadDayEvents() {
@@ -145,14 +161,31 @@ function removeDayEvent(date) {
   return data.day_events;
 }
 
+function deleteEntryById(id) {
+  const data = loadAll();
+  const numId = Number(id);
+  const list = data.entries || [];
+  const next = list.filter(e => Number(e.id) !== numId);
+  if (next.length === list.length) return false;
+  data.entries = next;
+  saveAll(data);
+  return true;
+}
+
 function getNextId(entries) {
   const max = entries.reduce((m, e) => (e.id > m ? e.id : m), 0);
   return max + 1;
 }
 
-function computeDerived(hoursWorked, cycleTimeSec, pdnReq, productedQty, actualHoursFromExcel) {
-  const actualHours = (actualHoursFromExcel != null && actualHoursFromExcel > 0)
-    ? Number(actualHoursFromExcel)
+/**
+ * @param actualWorkingHours Explicit hours spent producing (form / Excel). If missing or invalid, uses legacy (login hours × 11/12).
+ */
+function computeDerived(hoursWorked, cycleTimeSec, pdnReq, productedQty, actualWorkingHours) {
+  const explicit = actualWorkingHours != null && actualWorkingHours !== ''
+    ? Number(actualWorkingHours)
+    : NaN;
+  const actualHours = (Number.isFinite(explicit) && explicit > 0)
+    ? Math.round(explicit * 100) / 100
     : (hoursWorked * 11) / 12;
   const piecesPerHour = 3600 / cycleTimeSec;
   const actualPdn = piecesPerHour * actualHours;
@@ -166,6 +199,7 @@ module.exports = {
   save,
   loadAll,
   saveAll,
+  deleteEntryById,
   deleteAllData,
   loadDayEvents,
   upsertDayEvent,

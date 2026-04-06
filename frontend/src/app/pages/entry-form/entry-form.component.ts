@@ -42,8 +42,10 @@ export class EntryFormComponent implements OnInit {
     program_no: '',
     cycle_time_sec: 0,
     hours_worked: 12,
+    actual_working_hours: null,
     pdn_req: null,
     producted_qty: null,
+    payment: null,
     notes: ''
   });
   saving = signal(false);
@@ -71,15 +73,21 @@ export class EntryFormComponent implements OnInit {
     return list;
   });
 
-  /** PDN Req (target): 3600 ÷ cycle time × actual hours, rounded to whole number. */
+  /** PDN Req (target): (3600 ÷ cycle seconds) × actual working hours, rounded. */
   expectedProduction = computed(() => {
     const m = this.model();
     const ct = Number(m.cycle_time_sec);
-    const hw = Number(m.hours_worked);
-    if (!ct || ct <= 0 || !hw || hw <= 0) return null;
-    const actualHours = (hw * 11) / 12;
+    const awh = Number(m.actual_working_hours ?? m.actual_hours);
+    if (!ct || ct <= 0 || !Number.isFinite(awh) || awh <= 0) return null;
     const piecesPerHour = 3600 / ct;
-    return Math.round(piecesPerHour * actualHours);
+    return Math.round(piecesPerHour * awh);
+  });
+
+  /** Legacy hint: 11/12 of login hours when breaks are excluded. */
+  suggestedActualWorkingHours = computed(() => {
+    const hw = Number(this.model().hours_worked);
+    if (!Number.isFinite(hw) || hw <= 0) return null;
+    return Math.round((hw * 11) / 12 * 100) / 100;
   });
 
   ngOnInit() {
@@ -97,10 +105,11 @@ export class EntryFormComponent implements OnInit {
       this.id.set(id);
       this.api.getEntry(id).subscribe({
         next: (e) => {
-          this.model.set({ ...e });
+          const awh = e.actual_working_hours != null ? e.actual_working_hours : e.actual_hours;
+          this.model.set({ ...e, actual_working_hours: awh != null ? Number(awh) : null });
           this.hydrateCycleFromModel();
-          this.timeFrom.set('');
-          this.timeTo.set('');
+          this.timeFrom.set((e.time_from && String(e.time_from).trim()) || '');
+          this.timeTo.set((e.time_to && String(e.time_to).trim()) || '');
         },
         error: (err) => this.error.set(err?.error?.error || 'Not found')
       });
@@ -109,6 +118,11 @@ export class EntryFormComponent implements OnInit {
       this.timeFrom.set('08:00');
       this.timeTo.set('20:00');
       this.syncHoursFromTimes();
+      const hw = Number(this.model().hours_worked);
+      if (Number.isFinite(hw) && hw > 0) {
+        const sug = Math.round((hw * 11) / 12 * 100) / 100;
+        this.model.update(m => ({ ...m, actual_working_hours: sug }));
+      }
     }
   }
 
@@ -118,6 +132,30 @@ export class EntryFormComponent implements OnInit {
       this.model.update(m => ({
         ...m,
         hours_worked: Number.isFinite(n) ? Math.round(n * 100) / 100 : m.hours_worked
+      }));
+      return;
+    }
+    if (key === 'payment') {
+      if (value === '' || value == null) {
+        this.model.update(m => ({ ...m, payment: null }));
+        return;
+      }
+      const n = Number(value);
+      this.model.update(m => ({
+        ...m,
+        payment: Number.isFinite(n) ? Math.round(n * 100) / 100 : null
+      }));
+      return;
+    }
+    if (key === 'actual_working_hours') {
+      if (value === '' || value == null) {
+        this.model.update(m => ({ ...m, actual_working_hours: null }));
+        return;
+      }
+      const n = Number(value);
+      this.model.update(m => ({
+        ...m,
+        actual_working_hours: Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null
       }));
       return;
     }
@@ -179,13 +217,20 @@ export class EntryFormComponent implements OnInit {
     const m = this.model();
     const hw = Number(m.hours_worked);
     const ct = Number(m.cycle_time_sec);
+    const awh = Number(m.actual_working_hours);
     if (!m.date || !m.employee_name || !Number.isFinite(ct) || ct <= 0 || !Number.isFinite(hw) || hw <= 0) {
-      this.error.set('Fill date, employee name, cycle time (min + sec), and hours worked.');
+      this.error.set('Fill date, employee name, cycle time (min + sec), and login hours.');
+      return;
+    }
+    if (!Number.isFinite(awh) || awh <= 0) {
+      this.error.set('Enter actual working hours (time spent producing).');
       return;
     }
     this.saving.set(true);
     this.error.set(null);
     const pdnReq = (typeof m.pdn_req === 'number' && !Number.isNaN(m.pdn_req)) ? m.pdn_req : (this.expectedProduction() ?? null);
+    const tf = this.timeFrom().trim();
+    const tt = this.timeTo().trim();
     const payload = {
       date: m.date,
       employee_name: m.employee_name,
@@ -194,9 +239,13 @@ export class EntryFormComponent implements OnInit {
       program_no: m.program_no || '',
       cycle_time_sec: ct,
       hours_worked: hw,
+      actual_working_hours: awh,
       pdn_req: pdnReq,
       producted_qty: m.producted_qty ?? null,
-      notes: m.notes || ''
+      payment: m.payment != null && Number.isFinite(Number(m.payment)) ? Number(m.payment) : null,
+      notes: m.notes || '',
+      time_from: tf || null,
+      time_to: tt || null
     };
     const id = this.id();
     (id

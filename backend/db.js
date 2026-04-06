@@ -17,6 +17,7 @@ if (!useSupabase) {
     save: (e) => wrap(db.save)(e),
     loadAll: () => wrap(db.loadAll)(),
     saveAll: (d) => wrap(db.saveAll)(d),
+    deleteEntryById: (id) => wrap(db.deleteEntryById)(id),
     deleteAllData: () => wrap(db.deleteAllData)(),
     loadDayEvents: () => wrap(db.loadDayEvents)(),
     upsertDayEvent: (b) => wrap(db.upsertDayEvent)(b),

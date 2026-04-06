@@ -132,6 +132,13 @@ td.day-event-cell .muted {
   color: var(--sk-text-muted);
 }
 
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
 .link {
   background: none;
   border: none;
@@ -142,6 +149,10 @@ td.day-event-cell .muted {
   font-size: 0.9375rem;
   font-weight: 500;
   margin-right: 0.5rem;
+}
+
+.row-actions .link {
+  margin-right: 0;
 }
 
 .link:hover { text-decoration: underline; }

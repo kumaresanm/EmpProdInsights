@@ -12,7 +12,8 @@ const {
   removeProgram,
   loadDayEvents,
   upsertDayEvent,
-  removeDayEvent
+  removeDayEvent,
+  deleteAllData
 } = require('../db');
 
 router.get('/machines', async (req, res) => {
@@ -142,9 +143,14 @@ router.delete('/day-events/:date', async (req, res) => {
   }
 });
 
-/** DELETE /api/admin/data – disabled (bulk wipe removed to prevent accidental data loss) */
-router.delete('/data', (_req, res) => {
-  res.status(403).json({ error: 'Delete all data is disabled' });
+/** DELETE /api/admin/data – wipes all production entries and admin lists (explicit admin action only). */
+router.delete('/data', async (_req, res) => {
+  try {
+    await deleteAllData();
+    res.json({ ok: true, message: 'All production entries and admin lists were deleted.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Failed to delete data' });
+  }
 });
 
 module.exports = router;

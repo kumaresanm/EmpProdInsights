@@ -1,7 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const XLSX = require('xlsx');
-const { load, save, getNextId, computeDerived } = require('../db');
+const { load, save, getNextId, computeDerived, deleteEntryById } = require('../db');
+
+function shiftTimesFromBody(body) {
+  const rawF = body.time_from;
+  const rawT = body.time_to;
+  const tf = rawF != null && rawF !== '' && String(rawF).trim() !== '' ? String(rawF).trim() : null;
+  const tt = rawT != null && rawT !== '' && String(rawT).trim() !== '' ? String(rawT).trim() : null;
+  return { time_from: tf, time_to: tt };
+}
+
+/** Pay cycle length in hours (e.g. 6, 12); empty → null. */
+function paymentFromBody(body) {
+  const v = body.payment;
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+}
+
+/** Hours actually spent working (drives PDN target with cycle time). Prefer actual_working_hours; actual_hours accepted for older clients. */
+function actualWorkingHoursFromBody(body) {
+  const v = body.actual_working_hours != null ? body.actual_working_hours : body.actual_hours;
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n * 100) / 100;
+}
 
 /** Same filter logic as GET / – no default dates when empty */
 async function getFilteredEntries(req) {
@@ -36,7 +61,7 @@ router.get('/', async (req, res) => {
 });
 
 /** GET /api/entries/export – Excel with same filters as list (no default dates) */
-const EXPORT_HEADERS = ['Date', 'Name', 'Shift', 'Machine', 'Prg. No.', 'Cycle time Sec', 'PDN HR', 'Actual PDN', 'PDN Req', 'Producted Qty', 'Short', 'Reason'];
+const EXPORT_HEADERS = ['Date', 'Name', 'Shift', 'Machine', 'Prg. No.', 'Cycle time Sec', 'Login (h)', 'Actual work (h)', 'PDN Req', 'Producted Qty', 'Short', 'Pay cycle (hrs)', 'Reason'];
 function round2(x) {
   return x != null ? Math.round(Number(x) * 100) / 100 : null;
 }
@@ -57,6 +82,7 @@ function rowToExportRow(e) {
     pdnReq !== '' ? pdnReq : '',
     productedQty != null ? productedQty : '',
     shortVal != null ? shortVal : '',
+    e.payment != null ? round2(e.payment) : '',
     (e.notes || '').trim()
   ];
 }
@@ -96,9 +122,12 @@ router.post('/', async (req, res) => {
       date, employee_name, shift, machine, program_no,
       cycle_time_sec, hours_worked, pdn_req, producted_qty, notes
     } = req.body;
+    const { time_from: tf, time_to: tt } = shiftTimesFromBody(req.body);
+    const pay = paymentFromBody(req.body);
+    const awh = actualWorkingHoursFromBody(req.body);
     const ct = Number(cycle_time_sec);
     const hw = Number(hours_worked);
-    const { actualHours, piecesPerHour, actualPdn } = computeDerived(hw, ct, null, null);
+    const { actualHours, piecesPerHour, actualPdn } = computeDerived(hw, ct, null, null, awh);
     const pr = pdn_req != null && pdn_req !== '' ? Number(pdn_req) : actualPdn;
     const pq = producted_qty != null && producted_qty !== '' ? Number(producted_qty) : null;
     const short = pq != null ? pr - pq : null;
@@ -107,7 +136,8 @@ router.post('/', async (req, res) => {
     const row = {
       id, date, employee_name: employee_name || '', shift: shift || '', machine: machine || '', program_no: program_no || '',
       cycle_time_sec: ct, hours_worked: hw, actual_hours: actualHours, pieces_per_hour: piecesPerHour,
-      actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || ''
+      actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || '',
+      time_from: tf, time_to: tt, payment: pay
     };
     entries.push(row);
     await save(entries);
@@ -123,9 +153,12 @@ router.put('/:id', async (req, res) => {
       date, employee_name, shift, machine, program_no,
       cycle_time_sec, hours_worked, pdn_req, producted_qty, notes
     } = req.body;
+    const { time_from: tf, time_to: tt } = shiftTimesFromBody(req.body);
+    const pay = paymentFromBody(req.body);
+    const awh = actualWorkingHoursFromBody(req.body);
     const ct = Number(cycle_time_sec);
     const hw = Number(hours_worked);
-    const { actualHours, piecesPerHour, actualPdn } = computeDerived(hw, ct, null, null);
+    const { actualHours, piecesPerHour, actualPdn } = computeDerived(hw, ct, null, null, awh);
     const pr = pdn_req != null && pdn_req !== '' ? Number(pdn_req) : actualPdn;
     const pq = producted_qty != null && producted_qty !== '' ? Number(producted_qty) : null;
     const short = pq != null ? pr - pq : null;
@@ -136,7 +169,8 @@ router.put('/:id', async (req, res) => {
       ...entries[idx],
       date, employee_name: employee_name || '', shift: shift || '', machine: machine || '', program_no: program_no || '',
       cycle_time_sec: ct, hours_worked: hw, actual_hours: actualHours, pieces_per_hour: piecesPerHour,
-      actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || ''
+      actual_pdn: actualPdn, pdn_req: pr, producted_qty: pq, short, notes: notes || '',
+      time_from: tf, time_to: tt, payment: pay
     };
     entries[idx] = row;
     await save(entries);
@@ -148,11 +182,8 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const entries = await load();
-    const idx = entries.findIndex(e => String(e.id) === req.params.id);
-    if (idx === -1) return res.status(404).json({ error: 'Not found' });
-    entries.splice(idx, 1);
-    await save(entries);
+    const ok = await deleteEntryById(req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
     res.json({ deleted: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

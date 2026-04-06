@@ -47,27 +47,45 @@
         </div>
         <p class="muted cycle-total">Stored as {{ model().cycle_time_sec != null ? (model().cycle_time_sec | number:'1.2-2') : '0' }} s total for calculations.</p>
       </div>
-      <div class="field shift-hours-field">
-        <span class="label-text">From · To · Hours worked</span>
+
+      <div class="field hours-section shift-hours-field">
+        <span class="section-title">1 · Login hours (time in company)</span>
+        <span class="label-text">From, to, and total hours present</span>
         <div class="shift-hours-row">
           <label class="time-pair">
-            <span class="sublabel">From</span>
+            <span class="sublabel">From time</span>
             <input type="time" [ngModel]="timeFrom()" (ngModelChange)="setTimeFrom($event)" name="time_from" step="60" />
           </label>
           <label class="time-pair">
-            <span class="sublabel">To</span>
+            <span class="sublabel">To time</span>
             <input type="time" [ngModel]="timeTo()" (ngModelChange)="setTimeTo($event)" name="time_to" step="60" />
           </label>
           <label class="hours-inline">
-            <span class="sublabel">Hours</span>
-            <input type="number" step="0.01" min="0.01" [ngModel]="model().hours_worked" (ngModelChange)="updateField('hours_worked', $event)" name="hours_worked" />
+            <span class="sublabel">Hours (login)</span>
+            <input type="number" step="0.01" min="0.01" [ngModel]="model().hours_worked" (ngModelChange)="updateField('hours_worked', $event)" name="hours_worked" placeholder="Auto or type" />
           </label>
         </div>
-        <p class="muted shift-hours-hint">Both times update hours; you can edit hours anytime (changing From/To recalculates).</p>
+        <p class="muted shift-hours-hint">With both times set, login hours are calculated automatically (if To is before From, the next day is used). You can always type hours yourself.</p>
       </div>
+
+      <div class="field hours-section">
+        <span class="section-title">2 · Payment (pay cycle)</span>
+        <span class="label-text">Hours per pay cycle (not money)</span>
+        <input type="number" step="0.5" min="0" [ngModel]="model().payment" (ngModelChange)="updateField('payment', $event)" name="payment" placeholder="e.g. 6 or 12" />
+      </div>
+
+      <div class="field hours-section">
+        <span class="section-title">3 · Actual working hours</span>
+        <span class="label-text">Time spent producing (drives PDN target with cycle time)</span>
+        <input type="number" step="0.01" min="0.01" [ngModel]="model().actual_working_hours" (ngModelChange)="updateField('actual_working_hours', $event)" name="actual_working_hours" placeholder="e.g. 10.5" />
+        @if (suggestedActualWorkingHours() != null) {
+          <p class="muted hours-manual-hint">Typical rule of thumb (11/12 of login hours): {{ suggestedActualWorkingHours() | number:'1.2-2' }} h — adjust as needed.</p>
+        }
+      </div>
+
       <label class="field">
         <span class="label-text">PDN Req (target)</span>
-        <input type="number" step="0.01" [ngModel]="model().pdn_req ?? expectedProduction()" (ngModelChange)="updateField('pdn_req', $event)" name="pdn_req" [placeholder]="expectedProduction() == null ? 'Enter cycle time and hours worked' : ''" />
+        <input type="number" step="0.01" [ngModel]="model().pdn_req ?? expectedProduction()" (ngModelChange)="updateField('pdn_req', $event)" name="pdn_req" [placeholder]="expectedProduction() == null ? 'Enter cycle time and actual working hours' : ''" />
       </label>
       <label class="field">
         <span class="label-text">Produced qty</span>
@@ -83,5 +101,5 @@
       <a routerLink="/entries" class="btn-link">Cancel</a>
     </div>
   </form>
-  <p class="hint">Cycle time is minutes + seconds (stored as seconds). Hours can come from From/To or the Hours worked field. Actual hours = hours worked × 11/12. PDN Req is auto-calculated (3600 ÷ cycle time × actual hours); you can override if needed. Produced qty is from the machine. Short = PDN Req − Produced (on save).</p>
+  <p class="hint">Cycle time is minutes + seconds (stored as seconds). <strong>Login hours</strong> are time in the company (from / to / total). <strong>Payment</strong> is hours per pay cycle. <strong>Actual working hours</strong> are used for the target: (3600 ÷ cycle seconds) × actual working hours. You can override PDN Req. Short = PDN Req − Produced (on save).</p>
 </div>

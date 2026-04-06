@@ -20,6 +20,7 @@ export class AdminComponent implements OnInit {
   newProgram = signal('');
   error = signal<string | null>(null);
   message = signal<string | null>(null);
+  deletingAll = signal(false);
   dayEvents = signal<DayEvent[]>([]);
   newDayEventDate = signal('');
   newDayEventSummary = signal('');
@@ -119,6 +120,25 @@ export class AdminComponent implements OnInit {
     this.api.deleteDayEvent(date).subscribe({
       next: (list) => this.dayEvents.set(list),
       error: (e) => this.error.set(this.getErrorMessage(e))
+    });
+  }
+
+  deleteAllData() {
+    if (!confirm('Delete ALL production entries and clear Machines, Employees, Programs, and Day events? This cannot be undone.')) return;
+    if (!confirm('Final confirmation: every row in Production entries will be permanently removed.')) return;
+    this.error.set(null);
+    this.deletingAll.set(true);
+    this.api.deleteAllData().subscribe({
+      next: () => {
+        this.deletingAll.set(false);
+        this.load();
+        this.message.set('All data was deleted.');
+        setTimeout(() => this.message.set(null), 4000);
+      },
+      error: (e) => {
+        this.deletingAll.set(false);
+        this.error.set(this.getErrorMessage(e));
+      }
     });
   }
 

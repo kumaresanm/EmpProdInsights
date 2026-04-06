@@ -12,7 +12,11 @@ export interface ProductionEntry {
   machine: string;
   program_no: string;
   cycle_time_sec: number;
+  /** Time in company (login span); from/to + this field */
   hours_worked: number;
+  /** Hours spent actually working — PDN target uses (3600 ÷ cycle_time_sec) × this when set */
+  actual_working_hours?: number | null;
+  /** Stored on server; same meaning as actual working hours for display/back-compat */
   actual_hours?: number;
   pieces_per_hour?: number;
   actual_pdn?: number;
@@ -20,6 +24,11 @@ export interface ProductionEntry {
   producted_qty?: number | null;
   short?: number | null;
   notes?: string;
+  /** Pay cycle length in hours (e.g. 6 or 12); null if not set / legacy rows */
+  payment?: number | null;
+  /** HH:mm when saved (Supabase needs columns + SUPABASE_ENTRY_SHIFT_TIMES=1) */
+  time_from?: string | null;
+  time_to?: string | null;
 }
 
 export interface DashboardData {
@@ -180,5 +189,10 @@ export class ApiService {
 
   deleteDayEvent(date: string) {
     return this.http.delete<DayEvent[]>(`${API}/admin/day-events/${encodeURIComponent(date)}`);
+  }
+
+  /** Admin only: deletes all production entries, machines/employees/programs lists, and day events. */
+  deleteAllData() {
+    return this.http.delete<{ ok: boolean; message: string }>(`${API}/admin/data`);
   }
 }

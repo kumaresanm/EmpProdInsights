@@ -68,11 +68,13 @@ export class EntriesComponent implements OnInit {
     this.load();
   }
 
-  delete(id: number) {
-    if (!confirm('Delete this entry?')) return;
-    this.api.deleteEntry(id).subscribe({
+  deleteEntry(e: ProductionEntry) {
+    if (e.id == null) return;
+    const label = `${e.date} · ${e.employee_name || 'entry'}`;
+    if (!confirm(`Delete this production entry (${label})? This cannot be undone.`)) return;
+    this.api.deleteEntry(e.id).subscribe({
       next: () => this.load(),
-      error: (e) => this.error.set(e?.error?.error || 'Delete failed')
+      error: (err) => this.error.set(err?.error?.error || 'Delete failed')
     });
   }
 

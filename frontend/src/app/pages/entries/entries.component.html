@@ -41,11 +41,12 @@
             <th>Machine</th>
             <th>Program No</th>
             <th>Cycle time</th>
-            <th>Hrs worked</th>
-            <th>Actual PDN (hrs)</th>
+            <th>Login (h)</th>
+            <th>Actual work (h)</th>
             <th>PDN Req</th>
             <th>Produced</th>
             <th>Short</th>
+            <th>Pay cycle (h)</th>
             <th>Reason / Comments</th>
             <th></th>
           </tr>
@@ -65,14 +66,15 @@
               <td>{{ e.program_no }}</td>
               <td>{{ formatCycleDisplay(e.cycle_time_sec) }}</td>
               <td>{{ e.hours_worked != null ? (e.hours_worked | number:'1.1-2') : '-' }}</td>
-              <td>{{ (e.actual_hours ?? e.hours_worked) != null ? ((e.actual_hours ?? e.hours_worked) | number:'1.1-2') : '-' }}</td>
+              <td>{{ e.actual_hours != null ? (e.actual_hours | number:'1.1-2') : '-' }}</td>
               <td>{{ e.pdn_req != null ? (e.pdn_req | number:'1.0-0') : '-' }}</td>
               <td>{{ e.producted_qty != null ? (e.producted_qty | number:'1.2-2') : '-' }}</td>
               <td [class.negative]="e.short != null && e.short > 0">{{ e.short != null ? (e.short | number:'1.0-0') : '-' }}</td>
+              <td>{{ e.payment != null ? (e.payment | number:'1.1-2') : '—' }}</td>
               <td class="notes-cell">{{ e.notes || '' }}</td>
-              <td>
+              <td class="row-actions">
                 <a [routerLink]="['/entries', e.id, 'edit']" class="link">Edit</a>
-                <button type="button" class="link danger" (click)="delete(e.id!)">Delete</button>
+                <button type="button" class="link danger" (click)="deleteEntry(e)">Delete</button>
               </td>
             </tr>
           }

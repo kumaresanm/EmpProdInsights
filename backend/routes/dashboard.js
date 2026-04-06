@@ -101,7 +101,7 @@ router.get('/filters', async (req, res) => {
 });
 
 /** GET /api/dashboard/export – download filtered data as Excel (same format as import) */
-const EXPORT_HEADERS = ['Date', 'Name', 'Shift', 'Machine', 'Prg. No.', 'Cycle time Sec', 'PDN HR', 'Actual PDN', 'PDN Req', 'Producted Qty', 'Short', 'Reason'];
+const EXPORT_HEADERS = ['Date', 'Name', 'Shift', 'Machine', 'Prg. No.', 'Cycle time Sec', 'PDN HR', 'Actual PDN', 'PDN Req', 'Producted Qty', 'Short', 'Pay cycle (hrs)', 'Reason'];
 function round2(x) {
   return x != null ? Math.round(Number(x) * 100) / 100 : null;
 }
@@ -122,6 +122,7 @@ function rowToExportRow(e) {
     pdnReq !== '' ? pdnReq : '',
     productedQty != null ? productedQty : '',
     shortVal != null ? shortVal : '',
+    e.payment != null ? round2(e.payment) : '',
     (e.notes || '').trim()
   ];
 }

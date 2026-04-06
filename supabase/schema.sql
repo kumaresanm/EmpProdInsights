@@ -18,11 +18,17 @@ CREATE TABLE IF NOT EXISTS entries (
   short NUMERIC,
   notes TEXT NOT NULL DEFAULT '',
   time_from TEXT,
-  time_to TEXT
+  time_to TEXT,
+  payment NUMERIC -- hours per pay cycle (e.g. 6, 12), not currency
 );
 
+-- After running the ALTERs, set Render env SUPABASE_ENTRY_SHIFT_TIMES=1 so the API persists From/To.
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS time_from TEXT;
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS time_to TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS payment NUMERIC;
+COMMENT ON COLUMN entries.payment IS 'Hours per pay cycle (e.g. 6, 12), not currency.';
+COMMENT ON COLUMN entries.actual_hours IS 'Hours actually spent working; PDN target uses (3600 / cycle_time_sec) * actual_hours when not overridden.';
+COMMENT ON COLUMN entries.hours_worked IS 'Login / time in company (from shift span), distinct from actual working hours.';
 
 -- Config: machines, employees, programs (key = name, value = json array of strings)
 CREATE TABLE IF NOT EXISTS config (

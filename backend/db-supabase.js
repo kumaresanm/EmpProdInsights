@@ -9,6 +9,9 @@ const supabase = createClient(
 
 const DEFAULT_SHIFTS = ['1st', '2nd'];
 
+/** Set to 1 after: ALTER TABLE entries ADD COLUMN IF NOT EXISTS time_from TEXT; ADD COLUMN IF NOT EXISTS time_to TEXT; */
+const INCLUDE_ENTRY_SHIFT_TIMES = /^1|true$/i.test(String(process.env.SUPABASE_ENTRY_SHIFT_TIMES || '').trim());
+
 function normalizeConfigArray(val) {
   if (Array.isArray(val)) return val.map(v => (v != null ? String(v) : '')).filter(Boolean);
   if (typeof val === 'string') {
@@ -40,16 +43,37 @@ async function saveDayEventsToConfig(list) {
   await supabase.from('config').upsert({ key: 'day_events', value: list || [] }, { onConflict: 'key' });
 }
 
+const ENTRIES_PAGE = 1000;
+const UPSERT_CHUNK = 400;
+
+/** Fetch all rows — Supabase/PostgREST defaults to 1000 rows per request; without paging, sync would miss rows. */
 async function load() {
-  const { data, error } = await supabase.from('entries').select('*').order('id', { ascending: true });
-  if (error) throw error;
-  return (data || []).map(row => ({ ...row, id: Number(row.id) }));
+  const all = [];
+  let from = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from('entries')
+      .select('*')
+      .order('id', { ascending: true })
+      .range(from, from + ENTRIES_PAGE - 1);
+    if (error) throw error;
+    if (!data?.length) break;
+    all.push(...data);
+    if (data.length < ENTRIES_PAGE) break;
+    from += ENTRIES_PAGE;
+  }
+  return all.map(row => ({ ...row, id: Number(row.id) }));
 }
 
-async function save(entries) {
-  await supabase.from('entries').delete().neq('id', 0);
-  if (entries.length === 0) return;
-  const rows = entries.map(e => ({
+async function deleteEntryById(id) {
+  const numId = Number(id);
+  const { data, error } = await supabase.from('entries').delete().eq('id', numId).select('id');
+  if (error) throw error;
+  return !!(data && data.length > 0);
+}
+
+function entryToDbRow(e) {
+  const row = {
     id: e.id,
     date: e.date,
     employee_name: e.employee_name || '',
@@ -65,11 +89,34 @@ async function save(entries) {
     producted_qty: e.producted_qty,
     short: e.short,
     notes: e.notes || '',
-    time_from: e.time_from != null && String(e.time_from).trim() !== '' ? String(e.time_from).trim() : null,
-    time_to: e.time_to != null && String(e.time_to).trim() !== '' ? String(e.time_to).trim() : null
-  }));
-  const { error } = await supabase.from('entries').insert(rows);
-  if (error) throw error;
+    payment: (() => {
+      const v = e.payment;
+      if (v == null || v === '') return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+    })()
+  };
+  if (INCLUDE_ENTRY_SHIFT_TIMES) {
+    row.time_from = e.time_from != null && String(e.time_from).trim() !== '' ? String(e.time_from).trim() : null;
+    row.time_to = e.time_to != null && String(e.time_to).trim() !== '' ? String(e.time_to).trim() : null;
+  }
+  return row;
+}
+
+/**
+ * Upsert entries only — never deletes rows. Empty `entries` is a no-op (avoids accidental wipes).
+ * Removing production data is only done via deleteAllData() (Admin → Delete all data).
+ */
+async function save(entries) {
+  const list = Array.isArray(entries) ? entries : [];
+  if (list.length === 0) return;
+
+  const rows = list.map(entryToDbRow);
+  for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
+    const chunk = rows.slice(i, i + UPSERT_CHUNK);
+    const { error } = await supabase.from('entries').upsert(chunk, { onConflict: 'id' });
+    if (error) throw error;
+  }
 }
 
 async function loadAll() {
@@ -159,8 +206,10 @@ async function removeProgram(name) {
   return list;
 }
 
+/** Admin only: wipe all production entries, machines/employees/programs lists, and day events. */
 async function deleteAllData() {
-  await save([]);
+  const { error: delErr } = await supabase.from('entries').delete().neq('id', 0);
+  if (delErr) throw delErr;
   await setConfig('machines', []);
   await setConfig('employees', []);
   await setConfig('programs', []);
@@ -196,9 +245,15 @@ function getNextId(entries) {
   return max + 1;
 }
 
-function computeDerived(hoursWorked, cycleTimeSec, pdnReq, productedQty, actualHoursFromExcel) {
-  const actualHours = (actualHoursFromExcel != null && actualHoursFromExcel > 0)
-    ? Number(actualHoursFromExcel)
+/**
+ * @param actualWorkingHours Explicit hours spent producing (form / Excel). If missing or invalid, uses legacy (login hours × 11/12).
+ */
+function computeDerived(hoursWorked, cycleTimeSec, pdnReq, productedQty, actualWorkingHours) {
+  const explicit = actualWorkingHours != null && actualWorkingHours !== ''
+    ? Number(actualWorkingHours)
+    : NaN;
+  const actualHours = (Number.isFinite(explicit) && explicit > 0)
+    ? Math.round(explicit * 100) / 100
     : (hoursWorked * 11) / 12;
   const piecesPerHour = 3600 / cycleTimeSec;
   const actualPdn = piecesPerHour * actualHours;
@@ -212,6 +267,7 @@ module.exports = {
   save,
   loadAll,
   saveAll,
+  deleteEntryById,
   deleteAllData,
   loadDayEvents,
   upsertDayEvent,

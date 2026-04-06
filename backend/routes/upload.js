@@ -62,10 +62,13 @@ router.post('/', upload.single('file'), async (req, res) => {
         const excelActualHours = getMappedValue(row, 'actual_hours', fieldToIndex, schema);
         const rPdnReq = getMappedValue(row, 'pdn_req', fieldToIndex, schema);
         const rProductedQty = getMappedValue(row, 'producted_qty', fieldToIndex, schema);
+        const rPayment = getMappedValue(row, 'payment', fieldToIndex, schema);
         const { actualHours, piecesPerHour, actualPdn } = computeDerived(hw, cycleTime, null, null, excelActualHours);
         const pr = rPdnReq != null && rPdnReq !== '' ? rPdnReq : actualPdn;
         const pq = rProductedQty != null && rProductedQty !== '' ? rProductedQty : null;
         const short = pq != null ? pr - pq : null;
+        const payment = rPayment != null && rPayment !== '' && Number.isFinite(Number(rPayment))
+          ? Math.round(Number(rPayment) * 100) / 100 : null;
         toInsert.push({
           date,
           employee_name: name,
@@ -80,6 +83,7 @@ router.post('/', upload.single('file'), async (req, res) => {
           pdn_req: pr,
           producted_qty: pq,
           short,
+          payment,
           notes: getMappedValue(row, 'notes', fieldToIndex, schema) || ''
         });
       }
